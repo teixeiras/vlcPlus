@@ -1001,13 +1001,20 @@
         self.audioSwitcherButtonLandscape.hidden = YES;
     }
 
+    //Since we can download subtitles anytime, we always will give the option to download.
+    self.subtitleContainer.hidden = NO;
+    self.subtitleContainerLandscape.hidden = NO;
+    
+
+    //TODO: [FT] Garbage
+    /*
     if ([[_mediaPlayer videoSubTitlesIndexes] count] > 1) {
         self.subtitleContainer.hidden = NO;
         self.subtitleContainerLandscape.hidden = NO;
     } else {
         self.subtitleContainer.hidden = YES;
         self.subtitleContainerLandscape.hidden = YES;
-    }
+    }*/
 }
 
 - (IBAction)playPause
@@ -1067,23 +1074,7 @@
 
 - (IBAction)switchSubtitleTrack:(id)sender
 {
-    NSArray *spuTracks = [_mediaPlayer videoSubTitlesNames];
-    NSArray *spuTrackIndexes = [_mediaPlayer videoSubTitlesIndexes];
 
-    NSUInteger count = [spuTracks count];
-    if (count <= 1)
-        return;
-    _subtitleActionSheet = [[UIActionSheet alloc] initWithTitle:NSLocalizedString(@"CHOOSE_SUBTITLE_TRACK", @"subtitle track selector") delegate:self cancelButtonTitle:nil destructiveButtonTitle:nil otherButtonTitles: nil];
-
-    for (NSUInteger i = 0; i < count; i++) {
-        NSString *indexIndicator = ([spuTrackIndexes[i] intValue] == [_mediaPlayer currentVideoSubTitleIndex])? @"\u2713": @"";
-        NSString *buttonTitle = [NSString stringWithFormat:@"%@ %@", indexIndicator, spuTracks[i]];
-        [_subtitleActionSheet addButtonWithTitle:buttonTitle];
-    }
-
-    [_subtitleActionSheet addButtonWithTitle:NSLocalizedString(@"BUTTON_CANCEL", @"cancel button")];
-    [_subtitleActionSheet setCancelButtonIndex:[_subtitleActionSheet numberOfButtons] - 1];
-    [_subtitleActionSheet showInView:(UIButton *)sender];
 }
 
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
@@ -1092,12 +1083,7 @@
         return;
 
     NSArray *indexArray;
-    if (actionSheet == _subtitleActionSheet) {
-        indexArray = _mediaPlayer.videoSubTitlesIndexes;
-        if (buttonIndex <= indexArray.count) {
-            _mediaPlayer.currentVideoSubTitleIndex = [indexArray[buttonIndex] intValue];
-        }
-    } else if (actionSheet == _audiotrackActionSheet) {
+    if (actionSheet == _audiotrackActionSheet) {
         indexArray = _mediaPlayer.audioTrackIndexes;
         if (buttonIndex <= indexArray.count) {
             _mediaPlayer.currentAudioTrackIndex = [indexArray[buttonIndex] intValue];

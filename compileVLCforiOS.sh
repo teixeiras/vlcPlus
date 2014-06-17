@@ -245,7 +245,16 @@ git clone git://github.com/futuretap/InAppSettingsKit.git
 else
 cd WhiteRaccoon && git pull --rebase && cd ..
 fi
+
+
+if ! [ -e ObjCOpensubtitlesAPI ]; then
+git clone git://github.com/teixeiras/ObjCOpensubtitlesAPI.git
+else
+cd ObjCOpensubtitlesAPI && git pull --rebase && cd ..
 fi
+fi
+
+
 
 info "Setup 'External' folders"
 
@@ -260,6 +269,7 @@ upnpx_build="${aspen_root_dir}/ImportedSources/upnpx/projects/xcode4/upnpx/${xcb
 gtl_build="${aspen_root_dir}/ImportedSources/GDrive/${xcbuilddir}"
 plcrashreporter_build="${aspen_root_dir}/ImportedSources/PLCrashReporter/${xcbuilddir}"
 quincykit_build="${aspen_root_dir}/ImportedSources/QuincyKit/client/iOS/QuincyLib/${xcbuilddir}"
+opensubtitle_build="${aspen_root_dir}/ImportedSources/ObjCOpensubtitlesAPI/${xcbuilddir}"
 
 spopd #ImportedSources
 
@@ -269,6 +279,7 @@ ln -sf ${upnpx_build} External/upnpx
 ln -sf ${gtl_build} External/gtl
 ln -sf ${plcrashreporter_build} External/PLCrashReporter
 ln -sf ${quincykit_build} External/QuincyKit
+ln -sf ${opensubtitle_build} External/ObjCOpensubtitlesAPI
 
 #
 # Build time
@@ -323,6 +334,12 @@ spopd
 spushd QuincyKit/client/iOS/QuincyLib
 buildxcodeproj QuincyLib
 spopd
+
+
+spushd ObjCOpensubtitlesAPI/
+buildxcodeproj OpensubtitleAPI
+spopd
+
 
 spopd # ImportedSources
 

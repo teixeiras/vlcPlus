@@ -5,7 +5,7 @@
 set -e
 
 PLATFORM=iphoneos
-SDK=7.1
+SDK=`xcrun --sdk iphoneos --show-sdk-version`
 SDK_MIN=6.1
 VERBOSE=no
 CONFIGURATION="Release"
@@ -30,7 +30,7 @@ OPTIONS
    -d       Enable Debug
    -n       Skip script steps requiring network interaction
    -l       Skip libvlc compilation
-   -u       Compile unstable version of MobileVLCKit
+   -p       Compile stable version of MobileVLCKit (default unstable)
 EOF
 }
 
@@ -96,7 +96,7 @@ do
          k)
              SDK=$OPTARG
              ;;
-         u)
+         p)
              UNSTABLEVLCKIT=no
              ;;
          ?)

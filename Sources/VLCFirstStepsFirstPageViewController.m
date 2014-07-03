@@ -22,23 +22,25 @@
 {
     [super viewDidLoad];
 
-    self.titleLabel.text = NSLocalizedString(@"FIRST_STEPS_WELCOME", @"");
-    self.subtitleLabel.text = NSLocalizedString(@"FIRST_STEPS_WELCOME_DETAIL", @"");
+    self.titleLabel.text = NSLocalizedString(@"FIRST_STEPS_WELCOME", nil);
+    self.subtitleLabel.text = NSLocalizedString(@"FIRST_STEPS_WELCOME_DETAIL", nil);
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
+    [super viewWillAppear:animated];
     self.actualContentView.center = self.view.center;
 }
 
 - (void)viewDidAppear:(BOOL)animated
 {
+    [super viewDidAppear:animated];
     self.actualContentView.center = self.view.center;
 }
 
 - (NSString *)pageTitle
 {
-    return NSLocalizedString(@"FIRST_STEPS_WELCOME", @"");;
+    return NSLocalizedString(@"FIRST_STEPS_WELCOME", nil);;
 }
 
 - (NSUInteger)page

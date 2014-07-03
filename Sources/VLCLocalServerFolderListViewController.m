@@ -24,11 +24,12 @@
 #import "WhiteRaccoon.h"
 #import "NSString+SupportedMedia.h"
 #import "VLCStatusLabel.h"
+#import "BasicUPnPDevice+VLC.h"
 
 #define kVLCServerTypeUPNP 0
 #define kVLCServerTypeFTP 1
 
-@interface VLCLocalServerFolderListViewController () <UITableViewDataSource, UITableViewDelegate, WRRequestDelegate, VLCLocalNetworkListCell, UISearchBarDelegate, UISearchDisplayDelegate>
+@interface VLCLocalServerFolderListViewController () <UITableViewDataSource, UITableViewDelegate, WRRequestDelegate, VLCLocalNetworkListCell, UISearchBarDelegate, UISearchDisplayDelegate, UIActionSheetDelegate>
 {
     /* UI */
     UIBarButtonItem *_backButton;
@@ -53,6 +54,10 @@
     NSMutableArray *_searchData;
     UISearchBar *_searchBar;
     UISearchDisplayController *_searchDisplayController;
+
+    /* UPnP items with multiple resources specifics */
+    MediaServer1ItemObject *_lastSelectedMediaItem;
+    UIView *_resourceSelectionActionSheetAnchorView;
 }
 
 @end
@@ -62,10 +67,12 @@
 - (void)loadView
 {
     _tableView = [[UITableView alloc] initWithFrame:[UIScreen mainScreen].bounds style:UITableViewStylePlain];
-    _tableView.backgroundColor = [UIColor colorWithWhite:.122 alpha:1.];
+    _tableView.backgroundColor = [UIColor VLCDarkBackgroundColor];
     _tableView.delegate = self;
     _tableView.dataSource = self;
     _tableView.rowHeight = [VLCLocalNetworkListCell heightOfCell];
+    _tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    _tableView.indicatorStyle = UIScrollViewIndicatorStyleWhite;
     self.view = _tableView;
 }
 
@@ -104,12 +111,21 @@
     [super viewDidLoad];
 
     if (_serverType == kVLCServerTypeUPNP) {
+        NSString *sortCriteria = @"";
+        NSMutableString *outSortCaps = [[NSMutableString alloc] init];
+        [[_UPNPdevice contentDirectory] GetSortCapabilitiesWithOutSortCaps:outSortCaps];
+
+        if ([outSortCaps rangeOfString:@"dc:title"].location != NSNotFound)
+        {
+            sortCriteria = @"+dc:title";
+        }
+
         NSMutableString *outResult = [[NSMutableString alloc] init];
         NSMutableString *outNumberReturned = [[NSMutableString alloc] init];
         NSMutableString *outTotalMatches = [[NSMutableString alloc] init];
         NSMutableString *outUpdateID = [[NSMutableString alloc] init];
 
-        [[_UPNPdevice contentDirectory] BrowseWithObjectID:_UPNProotID BrowseFlag:@"BrowseDirectChildren" Filter:@"*" StartingIndex:@"0" RequestedCount:@"0" SortCriteria:@"+dc:title" OutResult:outResult OutNumberReturned:outNumberReturned OutTotalMatches:outTotalMatches OutUpdateID:outUpdateID];
+        [[_UPNPdevice contentDirectory] BrowseWithObjectID:_UPNProotID BrowseFlag:@"BrowseDirectChildren" Filter:@"*" StartingIndex:@"0" RequestedCount:@"0" SortCriteria:sortCriteria OutResult:outResult OutNumberReturned:outNumberReturned OutTotalMatches:outTotalMatches OutUpdateID:outUpdateID];
 
         [_mutableObjectList removeAllObjects];
         NSData *didl = [outResult dataUsingEncoding:NSUTF8StringEncoding];
@@ -123,8 +139,8 @@
         [self _listFTPDirectory];
     }
 
-    self.tableView.separatorColor = [UIColor colorWithWhite:.122 alpha:1.];
-    self.view.backgroundColor = [UIColor colorWithWhite:.122 alpha:1.];
+    self.tableView.separatorColor = [UIColor VLCDarkBackgroundColor];
+    self.view.backgroundColor = [UIColor VLCDarkBackgroundColor];
 
     self.title = _listTitle;
 
@@ -133,6 +149,8 @@
     _searchDisplayController.delegate = self;
     _searchDisplayController.searchResultsDataSource = self;
     _searchDisplayController.searchResultsDelegate = self;
+    _searchDisplayController.searchResultsTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    _searchDisplayController.searchResultsTableView.indicatorStyle = UIScrollViewIndicatorStyleWhite;
     if (SYSTEM_RUNS_IOS7_OR_LATER)
         _searchDisplayController.searchBar.searchBarStyle = UIBarStyleBlack;
     _searchBar.delegate = self;
@@ -210,12 +228,35 @@
             if (mediaSize < 1)
                 mediaSize = (bitrate * durationInSeconds);
 
-            [cell setSubtitle: [NSString stringWithFormat:@"%@ (%@)", [NSByteCountFormatter stringFromByteCount:mediaSize countStyle:NSByteCountFormatterCountStyleFile], [VLCTime timeWithInt:durationInSeconds * 1000].stringValue]];
+            // object.item.videoItem.videoBroadcast items (like the HDHomeRun) may not have this information. Center the title (this makes channel names look better for the HDHomeRun)
+            if (mediaSize > 0 && durationInSeconds > 0) {
+                [cell setSubtitle: [NSString stringWithFormat:@"%@ (%@)", [NSByteCountFormatter stringFromByteCount:mediaSize countStyle:NSByteCountFormatterCountStyleFile], [VLCTime timeWithInt:durationInSeconds * 1000].stringValue]];
+            } else {
+                cell.titleLabelCentered = YES;
+            }
+
+            // Custom TV icon for video broadcasts
+            if ([[mediaItem objectClass] isEqualToString:@"object.item.videoItem.videoBroadcast"]) {
+                UIImage *broadcastImage;
+
+                if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+                    broadcastImage = [UIImage imageNamed:@"TVBroadcastIcon"];
+                } else {
+                    broadcastImage = [UIImage imageNamed:@"TVBroadcastIcon~ipad"];
+                }
+                [cell setIcon:broadcastImage];
+            } else {
+                [cell setIcon:[UIImage imageNamed:@"blank"]];
+            }
+
             [cell setIsDirectory:NO];
-            cell.isDownloadable = YES;
             if (mediaItem.albumArt != nil)
                 [cell setIconURL:[NSURL URLWithString:mediaItem.albumArt]];
-            [cell setIcon:[UIImage imageNamed:@"blank"]];
+
+            // Disable downloading for the HDHomeRun for now to avoid infinite downloads (URI needs a duration parameter, otherwise you are just downloading a live stream). VLC also needs an extension in the file name for this to work.
+            if (![_UPNPdevice VLC_isHDHomeRunMediaServer]) {
+                cell.isDownloadable = YES;
+            }
             cell.delegate = self;
         } else {
             [cell setIsDirectory:YES];
@@ -255,7 +296,7 @@
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(VLCLocalNetworkListCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    UIColor *color = (indexPath.row % 2 == 0)? [UIColor blackColor]: [UIColor colorWithWhite:.122 alpha:1.];
+    UIColor *color = (indexPath.row % 2 == 0)? [UIColor blackColor]: [UIColor VLCDarkBackgroundColor];
     cell.contentView.backgroundColor = cell.titleLabel.backgroundColor = cell.folderTitleLabel.backgroundColor = cell.subtitleLabel.backgroundColor =  color;
 
     if (_serverType == kVLCServerTypeFTP)
@@ -294,18 +335,28 @@
             NSUInteger count = uriCollectionKeys.count;
             NSRange position;
             NSUInteger correctIndex = 0;
+            NSUInteger numberOfDownloadableResources = 0;
             for (NSUInteger i = 0; i < count; i++) {
                 position = [uriCollectionKeys[i] rangeOfString:@"http-get:*:video/"];
-                if (position.location != NSNotFound)
+                if (position.location != NSNotFound) {
                     correctIndex = i;
+                    numberOfDownloadableResources++;
+                }
             }
             NSArray *uriCollectionObjects = [[mediaItem uriCollection] allValues];
 
-            if (uriCollectionObjects.count > 0)
-                itemURL = [NSURL URLWithString:uriCollectionObjects[correctIndex]];
-            if (itemURL) {
-                VLCAppDelegate* appDelegate = [UIApplication sharedApplication].delegate;
-                [appDelegate openMovieFromURL:itemURL];
+            // Present an action sheet for the user to choose which URI to download. Do not deselect the cell to provide visual feedback to the user
+            if (numberOfDownloadableResources > 1) {
+                _resourceSelectionActionSheetAnchorView = [tableView cellForRowAtIndexPath:indexPath];
+                [self presentResourceSelectionActionSheetForUPnPMediaItem:mediaItem forDownloading:NO];
+            } else {
+                if (uriCollectionObjects.count > 0) {
+                    itemURL = [NSURL URLWithString:uriCollectionObjects[correctIndex]];
+                }
+                if (itemURL) {
+                    VLCAppDelegate* appDelegate = [UIApplication sharedApplication].delegate;
+                    [appDelegate openMovieFromURL:itemURL];
+                }
             }
         }
     } else if (_serverType == kVLCServerTypeFTP) {
@@ -327,13 +378,165 @@
             NSData *flippedData = [rawObjectName dataUsingEncoding:[[[NSUserDefaults standardUserDefaults] objectForKey:kVLCSettingFTPTextEncoding] intValue] allowLossyConversion:YES];
             NSString *properObjectName = [[NSString alloc] initWithData:flippedData encoding:NSUTF8StringEncoding];
             if (![properObjectName isSupportedFormat]) {
-                UIAlertView * alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"FILE_NOT_SUPPORTED", @"") message:[NSString stringWithFormat:NSLocalizedString(@"FILE_NOT_SUPPORTED_LONG", @""), properObjectName] delegate:self cancelButtonTitle:NSLocalizedString(@"BUTTON_CANCEL", @"") otherButtonTitles:nil];
+                UIAlertView * alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"FILE_NOT_SUPPORTED", nil) message:[NSString stringWithFormat:NSLocalizedString(@"FILE_NOT_SUPPORTED_LONG", nil), properObjectName] delegate:self cancelButtonTitle:NSLocalizedString(@"BUTTON_CANCEL", nil) otherButtonTitles:nil];
                 [alert show];
             } else
                 [self _streamFTPFile:properObjectName];
         }
     }
     [tableView deselectRowAtIndexPath:indexPath animated:NO];
+}
+
+#pragma mark - UPnP Multiple Resources
+
+/// Presents an UIActionSheet for the user to choose which <res> resource to play or download. Contains some display code specific to the HDHomeRun devices. Also parses "DLNA.ORG_PN" protocolInfo.
+- (void)presentResourceSelectionActionSheetForUPnPMediaItem:(MediaServer1ItemObject *)mediaItem forDownloading:(BOOL)forDownloading {
+    NSParameterAssert(mediaItem);
+
+    if (!mediaItem) {
+        return;
+    }
+
+    // Store it so we can act on the action sheet callback.
+    _lastSelectedMediaItem = mediaItem;
+
+    NSArray *uriCollectionKeys = [[_lastSelectedMediaItem uriCollection] allKeys];
+    NSArray *uriCollectionObjects = [[_lastSelectedMediaItem uriCollection] allValues];
+    NSUInteger count = uriCollectionKeys.count;
+    NSRange position;
+
+    NSString *titleString;
+
+    if (!forDownloading) {
+        titleString = NSLocalizedString(@"SELECT_RESOURCE_TO_PLAY", nil);
+    } else {
+        titleString = NSLocalizedString(@"SELECT_RESOURCE_TO_DOWNLOAD", nil);
+    }
+
+    UIActionSheet *actionSheet = [[UIActionSheet alloc] initWithTitle:titleString
+                                                             delegate:self
+                                                    cancelButtonTitle:nil
+                                               destructiveButtonTitle:nil
+                                                    otherButtonTitles:nil];
+
+    // Provide users with a descriptive action sheet for them to choose based on the multiple resources advertised by DLNA devices (HDHomeRun for example)
+    for (NSUInteger i = 0; i < count; i++) {
+        position = [uriCollectionKeys[i] rangeOfString:@"http-get:*:video/"];
+        if (position.location != NSNotFound) {
+            NSString *orgPNValue;
+            NSString *transcodeValue;
+
+            // Attempt to parse DLNA.ORG_PN first
+            NSString *protocolInfo = uriCollectionKeys[i];
+            NSArray *components = [protocolInfo componentsSeparatedByString:@";"];
+            NSArray *nonFlagsComponents = [components[0] componentsSeparatedByString:@":"];
+            NSString *orgPN = [nonFlagsComponents lastObject];
+
+            // Check to see if we are where we should be
+            NSRange orgPNRange = [orgPN rangeOfString:@"DLNA.ORG_PN="];
+            if (orgPNRange.location == 0) {
+                orgPNValue = [orgPN substringFromIndex:orgPNRange.length];
+            }
+
+            // HDHomeRun: Get the transcode profile from the HTTP API if possible
+            if ([_UPNPdevice VLC_isHDHomeRunMediaServer]) {
+                NSRange transcodeRange = [uriCollectionObjects[i] rangeOfString:@"transcode="];
+                if (transcodeRange.location != NSNotFound) {
+                    transcodeValue = [uriCollectionObjects[i] substringFromIndex:transcodeRange.location + transcodeRange.length];
+                    // Check that there are no more parameters
+                    NSRange ampersandRange = [transcodeValue rangeOfString:@"&"];
+                    if (ampersandRange.location != NSNotFound) {
+                        transcodeValue = [transcodeValue substringToIndex:transcodeRange.location];
+                    }
+
+                    transcodeValue = [transcodeValue capitalizedString];
+                }
+            }
+
+            // Fallbacks to get the most descriptive resource title
+            NSString *profileTitle;
+            if ([transcodeValue length] && [orgPNValue length]) {
+                profileTitle = [NSString stringWithFormat:@"%@ (%@)", transcodeValue, orgPNValue];
+
+                // The extra whitespace is to get UIActionSheet to render the text better (this bug has been fixed in iOS 8)
+                if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+                    if (!SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"8.0")) {
+                        profileTitle = [NSString stringWithFormat:@" %@ ", profileTitle];
+                    }
+                }
+            } else if ([transcodeValue length]) {
+                profileTitle = transcodeValue;
+            } else if ([orgPNValue length]) {
+                profileTitle = orgPNValue;
+            } else if ([uriCollectionKeys[i] length]) {
+                profileTitle = uriCollectionKeys[i];
+            } else if ([uriCollectionObjects[i] length]) {
+                profileTitle = uriCollectionObjects[i];
+            } else  {
+                profileTitle = NSLocalizedString(@"UNKNOWN", nil);
+            }
+
+            [actionSheet addButtonWithTitle:profileTitle];
+        }
+    }
+
+    // If no resources are found, an empty action sheet will be presented, but the fact that we got here implies that we have playable resources, so no special handling for this case is included
+    actionSheet.cancelButtonIndex = [actionSheet addButtonWithTitle:NSLocalizedString(@"BUTTON_CANCEL", nil)];
+
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        // Attach it to a specific view (a cell, a download button, etc)
+        if (_resourceSelectionActionSheetAnchorView) {
+            CGRect presentationRect = [self.view convertRect:_resourceSelectionActionSheetAnchorView.frame fromView:_resourceSelectionActionSheetAnchorView.superview];
+            [actionSheet showFromRect:presentationRect inView:self.view animated:YES];
+        } else {
+            [actionSheet showInView:self.view];
+        }
+    } else {
+        [actionSheet showInView:self.view];
+    }
+}
+
+#pragma mark - UIActionSheetDelegate
+
+- (void)actionSheet:(UIActionSheet *)actionSheet didDismissWithButtonIndex:(NSInteger)buttonIndex
+{
+    // Act on the selected resource that the user selected
+    if (_lastSelectedMediaItem) {
+        if (buttonIndex != actionSheet.cancelButtonIndex) {
+            // Check again through our raw list which items are playable, since this same code was used to build the action sheet. Make sure we choose the right object based on the action sheet button index.
+            NSArray *uriCollectionKeys = [[_lastSelectedMediaItem uriCollection] allKeys];
+            NSArray *uriCollectionObjects = [[_lastSelectedMediaItem uriCollection] allValues];
+
+            if (uriCollectionObjects.count > 0) {
+                NSUInteger count = uriCollectionKeys.count;
+                NSMutableArray *possibleCollectionObjects = [[NSMutableArray alloc] initWithCapacity:[uriCollectionObjects count]];
+
+                for (NSUInteger i = 0; i < count; i++) {
+                    if ([uriCollectionKeys[i] rangeOfString:@"http-get:*:video/"].location != NSNotFound) {
+                        [possibleCollectionObjects addObject:uriCollectionObjects[i]];
+                    }
+                }
+
+                NSString *itemURLString = uriCollectionObjects[buttonIndex];
+
+                if ([itemURLString length]) {
+                    VLCAppDelegate* appDelegate = [UIApplication sharedApplication].delegate;
+                    [appDelegate openMovieFromURL:[NSURL URLWithString:itemURLString]];
+                }
+            }
+        }
+
+        _lastSelectedMediaItem = nil;
+        _resourceSelectionActionSheetAnchorView = nil;
+
+        UITableView *activeTableView;
+        if ([self.searchDisplayController isActive]) {
+            activeTableView = self.searchDisplayController.searchResultsTableView;
+        } else {
+            activeTableView = self.tableView;
+        }
+        [activeTableView deselectRowAtIndexPath:[activeTableView indexPathForSelectedRow] animated:NO];
+    }
 }
 
 #pragma mark - FTP specifics
@@ -394,7 +597,7 @@
         itemURL = [NSURL URLWithString:uriCollectionObjects[correctIndex]];
 
     if (![itemURL.absoluteString isSupportedFormat]) {
-        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"FILE_NOT_SUPPORTED", @"") message:[NSString stringWithFormat:NSLocalizedString(@"FILE_NOT_SUPPORTED_LONG", @""), [mediaItem uri]] delegate:self cancelButtonTitle:NSLocalizedString(@"BUTTON_CANCEL", @"") otherButtonTitles:nil];
+        UIAlertView * alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"FILE_NOT_SUPPORTED", nil) message:[NSString stringWithFormat:NSLocalizedString(@"FILE_NOT_SUPPORTED_LONG", nil), [mediaItem uri]] delegate:self cancelButtonTitle:NSLocalizedString(@"BUTTON_CANCEL", nil) otherButtonTitles:nil];
         [alert show];
     } else if (itemURL) {
         NSString *fileName = [[mediaItem.title stringByAppendingString:@"."] stringByAppendingString:[[itemURL absoluteString] pathExtension]];
@@ -422,7 +625,7 @@
 
 - (void)requestFailed:(WRRequest *)request
 {
-    UIAlertView * alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"LOCAL_SERVER_CONNECTION_FAILED_TITLE", nil) message:NSLocalizedString(@"LOCAL_SERVER_CONNECTION_FAILED_MESSAGE", nil) delegate:self cancelButtonTitle:NSLocalizedString(@"BUTTON_CANCEL", @"") otherButtonTitles:nil];
+    UIAlertView * alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"LOCAL_SERVER_CONNECTION_FAILED_TITLE", nil) message:NSLocalizedString(@"LOCAL_SERVER_CONNECTION_FAILED_MESSAGE", nil) delegate:self cancelButtonTitle:NSLocalizedString(@"BUTTON_CANCEL", nil) otherButtonTitles:nil];
     [alert show];
 
     APLog(@"request %@ failed with error %i", request, request.error.errorCode);
@@ -439,7 +642,7 @@
             item = _mutableObjectList[[self.tableView indexPathForCell:cell].row];
 
         [self _downloadUPNPFileFromMediaItem:item];
-        [cell.statusLabel showStatusMessage:NSLocalizedString(@"DOWNLOADING", @"")];
+        [cell.statusLabel showStatusMessage:NSLocalizedString(@"DOWNLOADING", nil)];
     }else if (_serverType == kVLCServerTypeFTP) {
         NSString *rawObjectName;
         NSMutableArray *ObjList = [[NSMutableArray alloc] init];
@@ -456,11 +659,11 @@
         NSData *flippedData = [rawObjectName dataUsingEncoding:[[[NSUserDefaults standardUserDefaults] objectForKey:kVLCSettingFTPTextEncoding] intValue] allowLossyConversion:YES];
         NSString *properObjectName = [[NSString alloc] initWithData:flippedData encoding:NSUTF8StringEncoding];
         if (![properObjectName isSupportedFormat]) {
-            UIAlertView * alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"FILE_NOT_SUPPORTED", @"") message:[NSString stringWithFormat:NSLocalizedString(@"FILE_NOT_SUPPORTED_LONG", @""), properObjectName] delegate:self cancelButtonTitle:NSLocalizedString(@"BUTTON_CANCEL", @"") otherButtonTitles:nil];
+            UIAlertView * alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"FILE_NOT_SUPPORTED", nil) message:[NSString stringWithFormat:NSLocalizedString(@"FILE_NOT_SUPPORTED_LONG", nil), properObjectName] delegate:self cancelButtonTitle:NSLocalizedString(@"BUTTON_CANCEL", nil) otherButtonTitles:nil];
             [alert show];
         } else {
             [self _downloadFTPFile:properObjectName];
-            [cell.statusLabel showStatusMessage:NSLocalizedString(@"DOWNLOADING", @"")];
+            [cell.statusLabel showStatusMessage:NSLocalizedString(@"DOWNLOADING", nil)];
         }
     }
 }

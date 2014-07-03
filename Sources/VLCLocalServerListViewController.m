@@ -61,6 +61,14 @@
 
 - (void)dealloc
 {
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:UIApplicationWillResignActiveNotification
+                                                  object:[UIApplication sharedApplication]];
+
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:UIApplicationDidBecomeActiveNotification
+                                                  object:[UIApplication sharedApplication]];
+
     [_reachability stopNotifier];
     [_ftpNetServiceBrowser stop];
     [_PlexNetServiceBrowser stop];
@@ -69,9 +77,11 @@
 - (void)loadView
 {
     _tableView = [[UITableView alloc] initWithFrame:[UIScreen mainScreen].bounds style:UITableViewStylePlain];
-    _tableView.backgroundColor = [UIColor colorWithWhite:.122 alpha:1.];
+    _tableView.backgroundColor = [UIColor VLCDarkBackgroundColor];
     _tableView.delegate = self;
     _tableView.dataSource = self;
+    _tableView.indicatorStyle = UIScrollViewIndicatorStyleWhite;
+    _tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
     self.view = _tableView;
     _activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
     _activityIndicator.center = _tableView.center;
@@ -80,23 +90,47 @@
     [self.view addSubview:_activityIndicator];
 }
 
+- (void)applicationWillResignActive:(NSNotification *)notification
+{
+    [self _stopUPNPDiscovery];
+    [self _stopSAPDiscovery];
+}
+
+- (void)applicationDidBecomeActive:(NSNotification *)notification
+{
+    if (_reachability.currentReachabilityStatus == ReachableViaWiFi) {
+        [self performSelectorInBackground:@selector(_startUPNPDiscovery) withObject:nil];
+        [self performSelectorInBackground:@selector(_startSAPDiscovery) withObject:nil];
+    }
+}
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
 
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(applicationWillResignActive:)
+                                                 name:UIApplicationWillResignActiveNotification
+                                               object:[UIApplication sharedApplication]];
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(applicationDidBecomeActive:)
+                                                 name:UIApplicationDidBecomeActiveNotification
+                                               object:[UIApplication sharedApplication]];
+
 /*    if (SYSTEM_RUNS_IOS7_OR_LATER)
         _sectionHeaderTexts = @[@"Universal Plug'n'Play (UPNP)", @"File Transfer Protocol (FTP)", @"Network Streams (SAP)"];
     else*/
-        _sectionHeaderTexts = @[@"Universal Plug'n'Play (UPNP)", @"Plex Media Server (via Bonjour)", @"File Transfer Protocol (FTP)"];
+        _sectionHeaderTexts = @[@"Universal Plug'n'Play (UPnP)", @"Plex Media Server (via Bonjour)", @"File Transfer Protocol (FTP)"];
 
     _backToMenuButton = [UIBarButtonItem themedRevealMenuButtonWithTarget:self andSelector:@selector(goBack:)];
     self.navigationItem.leftBarButtonItem = _backToMenuButton;
 
     self.tableView.rowHeight = [VLCLocalNetworkListCell heightOfCell];
-    self.tableView.separatorColor = [UIColor colorWithWhite:.122 alpha:1.];
-    self.view.backgroundColor = [UIColor colorWithWhite:.122 alpha:1.];
+    self.tableView.separatorColor = [UIColor VLCDarkBackgroundColor];
+    self.view.backgroundColor = [UIColor VLCDarkBackgroundColor];
 
-    self.title = NSLocalizedString(@"LOCAL_NETWORK", @"");
+    self.title = NSLocalizedString(@"LOCAL_NETWORK", nil);
 
     _ftpServices = [[NSMutableArray alloc] init];
     [_ftpServices addObject:NSLocalizedString(@"CONNECT_TO_SERVER", nil)];
@@ -245,7 +279,7 @@
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(VLCLocalNetworkListCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    UIColor *color = (indexPath.row % 2 == 0)? [UIColor blackColor]: [UIColor colorWithWhite:.122 alpha:1.];
+    UIColor *color = (indexPath.row % 2 == 0)? [UIColor blackColor]: [UIColor VLCDarkBackgroundColor];
     cell.contentView.backgroundColor = cell.titleLabel.backgroundColor = cell.folderTitleLabel.backgroundColor = cell.subtitleLabel.backgroundColor = color;
 }
 
@@ -388,7 +422,7 @@
 
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
 {
-    NSObject *headerText = NSLocalizedString(_sectionHeaderTexts[section], @"");
+    NSObject *headerText = NSLocalizedString(_sectionHeaderTexts[section], nil);
     UIView *headerView = nil;
     if (headerText != [NSNull null]) {
         headerView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, [UIScreen mainScreen].bounds.size.height, 21.0f)];
@@ -401,13 +435,13 @@
                           ];
             [headerView.layer insertSublayer:gradient atIndex:0];
         } else
-            headerView.backgroundColor = [UIColor colorWithWhite:.122 alpha:1.];
+            headerView.backgroundColor = [UIColor VLCDarkBackgroundColor];
 
-        UILabel *textLabel = [[UILabel alloc] initWithFrame:CGRectInset(headerView.bounds, 12.0f, 5.0f)];
+        UILabel *textLabel = [[UILabel alloc] initWithFrame:CGRectInset(headerView.bounds, 12.0f, 0.f)];
         textLabel.text = (NSString *) headerText;
         textLabel.font = [UIFont fontWithName:@"Helvetica-Bold" size:([UIFont systemFontSize] * 0.8f)];
         textLabel.shadowOffset = CGSizeMake(0.0f, 1.0f);
-        textLabel.shadowColor = [UIColor colorWithWhite:0.0f alpha:0.25f];
+        textLabel.shadowColor = [UIColor VLCDarkTextShadowColor];
         textLabel.textColor = [UIColor colorWithRed:(118.0f/255.0f) green:(118.0f/255.0f) blue:(118.0f/255.0f) alpha:1.0f];
         textLabel.backgroundColor = [UIColor clearColor];
         [headerView addSubview:textLabel];

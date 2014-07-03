@@ -2,7 +2,7 @@
  * VLCAboutViewController.m
  * VLC for iOS
  *****************************************************************************
- * Copyright (c) 2013 VideoLAN. All rights reserved.
+ * Copyright (c) 2013-2014 VideoLAN. All rights reserved.
  * $Id$
  *
  * Authors: Felix Paul Kühne <fkuehne # videolan.org>
@@ -16,7 +16,24 @@
 #import "VLCAppDelegate.h"
 #import "UIBarButtonItem+Theme.h"
 
+@interface VLCAboutViewController ()
+{
+    UIWebView *_webView;
+}
+
+@end
+
 @implementation VLCAboutViewController
+
+- (void)loadView
+{
+    _webView = [[UIWebView alloc] initWithFrame:[UIScreen mainScreen].bounds];
+    _webView.clipsToBounds = YES;
+    _webView.delegate = self;
+    _webView.backgroundColor = [UIColor VLCDarkBackgroundColor];
+    _webView.scrollView.indicatorStyle = UIScrollViewIndicatorStyleWhite;
+    self.view = _webView;
+}
 
 - (void)viewDidLoad
 {
@@ -24,7 +41,7 @@
 
     self.navigationItem.titleView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"title"]];
 
-    UIBarButtonItem *contributeButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"BUTTON_CONTRIBUTE",@"") style:UIBarButtonItemStyleBordered target:self action:@selector(openContributePage:)];
+    UIBarButtonItem *contributeButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"BUTTON_CONTRIBUTE", nil) style:UIBarButtonItemStyleBordered target:self action:@selector(openContributePage:)];
     if (SYSTEM_RUNS_IOS7_OR_LATER)
         contributeButton.tintColor = [UIColor whiteColor];
     else {
@@ -35,15 +52,11 @@
     self.navigationItem.rightBarButtonItem = contributeButton;
     self.navigationItem.leftBarButtonItem = [UIBarButtonItem themedRevealMenuButtonWithTarget:self andSelector:@selector(goBack:)];
 
-    self.view.backgroundColor = [UIColor colorWithWhite:.122 alpha:1.];
-    self.webView.backgroundColor = [UIColor colorWithWhite:.122 alpha:1.];
-
     NSMutableString *htmlContent = [NSMutableString stringWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"About Contents" ofType:@"html"] encoding:NSUTF8StringEncoding error:nil];
-    [htmlContent replaceOccurrencesOfString:@"VLCFORIOSVERSION" withString:[[NSString stringWithFormat:NSLocalizedString(@"VERSION_FORMAT",@""), [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"]] stringByAppendingFormat:@"<br /><i>%@</i>", kVLCVersionCodename] options:NSLiteralSearch range:NSMakeRange(800, 1000)];
-    [htmlContent replaceOccurrencesOfString:@"MOBILEVLCKITVERSION" withString:[NSString stringWithFormat:NSLocalizedString(@"BASED_ON_FORMAT",@""),[[VLCLibrary sharedLibrary] version]] options:NSLiteralSearch range:NSMakeRange(800, 1100)];
-    [self.webView loadHTMLString:[NSString stringWithString:htmlContent] baseURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] bundlePath]]];
+    [htmlContent replaceOccurrencesOfString:@"VLCFORIOSVERSION" withString:[[NSString stringWithFormat:NSLocalizedString(@"VERSION_FORMAT", nil), [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"]] stringByAppendingFormat:@"<br /><i>%@</i>", kVLCVersionCodename] options:NSLiteralSearch range:NSMakeRange(800, 1000)];
+    [htmlContent replaceOccurrencesOfString:@"MOBILEVLCKITVERSION" withString:[NSString stringWithFormat:NSLocalizedString(@"BASED_ON_FORMAT", nil),[[VLCLibrary sharedLibrary] version]] options:NSLiteralSearch range:NSMakeRange(800, 1100)];
+    [_webView loadHTMLString:[NSString stringWithString:htmlContent] baseURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] bundlePath]]];
     htmlContent = nil;
-    self.webView.delegate = self;
 }
 
 - (BOOL)shouldAutorotate

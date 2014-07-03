@@ -13,6 +13,8 @@
 
 #import "VLCLocalNetworkListCell.h"
 
+#import "VLCStatusLabel.h"
+
 @implementation VLCLocalNetworkListCell
 
 + (VLCLocalNetworkListCell *)cellWithReuseIdentifier:(NSString *)ident
@@ -31,23 +33,38 @@
     self.subtitleLabel.text = @"";
     self.thumbnailView.contentMode = UIViewContentModeScaleAspectFit;
     self.downloadButton.hidden = YES;
+
+    if (SYSTEM_RUNS_IOS7_OR_LATER) {
+        self.titleLabel.highlightedTextColor = [UIColor blackColor];
+        self.folderTitleLabel.highlightedTextColor = [UIColor blackColor];
+        self.subtitleLabel.highlightedTextColor = [UIColor blackColor];
+        self.statusLabel.highlightedTextColor = [UIColor blackColor];
+    }
+}
+
+- (void)setTitleLabelCentered:(BOOL)titleLabelCentered
+{
+    self.titleLabel.hidden = self.subtitleLabel.hidden = titleLabelCentered;
+    self.folderTitleLabel.hidden = !titleLabelCentered;
+
+    _titleLabelCentered = YES;
 }
 
 - (void)setIsDirectory:(BOOL)isDirectory
 {
-    self.titleLabel.hidden = self.subtitleLabel.hidden = isDirectory;
-    self.folderTitleLabel.hidden = !isDirectory;
+    self.titleLabelCentered = isDirectory;
 
     _isDirectory = isDirectory;
 }
 
 - (void)setTitle:(NSString *)title
 {
-    BOOL isDir = self.isDirectory;
+    BOOL isDirOrCentered = self.isDirectory || [self isTitleLabelCentered];
+
     self.folderTitleLabel.text = self.titleLabel.text = title;
 
-    self.titleLabel.hidden = self.subtitleLabel.hidden = isDir;
-    self.folderTitleLabel.hidden = !isDir;
+    self.titleLabel.hidden = self.subtitleLabel.hidden = isDirOrCentered;
+    self.folderTitleLabel.hidden = !isDirOrCentered;
 
     _title = title;
 }

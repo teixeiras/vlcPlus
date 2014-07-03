@@ -79,6 +79,7 @@
     _tableView.autoresizingMask = UIViewAutoresizingFlexibleHeight;
     _tableView.backgroundColor = [UIColor colorWithRed:(43.0f/255.0f) green:(43.0f/255.0f) blue:(43.0f/255.0f) alpha:1.0f];
     _tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    _tableView.indicatorStyle = UIScrollViewIndicatorStyleWhite;
     _tableView.rowHeight = [VLCWiFiUploadTableViewCell heightOfCell];
     _tableView.scrollsToTop = NO;
 
@@ -122,6 +123,7 @@
 
 - (void)viewWillAppear:(BOOL)animated
 {
+    [super viewWillAppear:animated];
     self.view.frame = CGRectMake(0.0f, 0.0f,kGHRevealSidebarWidth, CGRectGetHeight(self.view.bounds));
     [self netReachabilityChanged:nil];
 }
@@ -135,7 +137,7 @@
         [_uploadButton setImage:[UIImage imageNamed:@"WifiUp"] forState:UIControlStateNormal];
         _uploadButton.enabled = NO;
         [_uploadButton setImage:[UIImage imageNamed:@"WiFiUp"] forState:UIControlStateDisabled];
-        _uploadLocationLabel.text = NSLocalizedString(@"HTTP_UPLOAD_NO_CONNECTIVITY", @"");
+        _uploadLocationLabel.text = NSLocalizedString(@"HTTP_UPLOAD_NO_CONNECTIVITY", nil);
         [self.uploadController changeHTTPServerState:NO];
     }
 }
@@ -222,7 +224,7 @@
     }
 
     if (!([rawTitle isEqualToString:@"Dropbox"] || [rawTitle isEqualToString:@"WEBINTF_TITLE"]))
-        cell.textLabel.text = NSLocalizedString(rawTitle, @"");
+        cell.textLabel.text = NSLocalizedString(rawTitle, nil);
 
     return cell;
 }
@@ -237,7 +239,7 @@
 
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
 {
-    NSObject *headerText = NSLocalizedString(_sectionHeaderTexts[section], @"");
+    NSObject *headerText = NSLocalizedString(_sectionHeaderTexts[section], nil);
     UIView *headerView = nil;
     if (headerText != [NSNull null]) {
         headerView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, [UIScreen mainScreen].bounds.size.height, 21.0f)];
@@ -250,13 +252,13 @@
                           ];
             [headerView.layer insertSublayer:gradient atIndex:0];
         } else
-            headerView.backgroundColor = [UIColor colorWithWhite:.122 alpha:1.];
+            headerView.backgroundColor = [UIColor VLCDarkBackgroundColor];
 
         UILabel *textLabel = [[UILabel alloc] initWithFrame:CGRectInset(headerView.bounds, 12.0f, 5.0f)];
         textLabel.text = (NSString *) headerText;
         textLabel.font = [UIFont fontWithName:@"Helvetica-Bold" size:([UIFont systemFontSize] * 0.8f)];
         textLabel.shadowOffset = CGSizeMake(0.0f, 1.0f);
-        textLabel.shadowColor = [UIColor colorWithWhite:0.0f alpha:0.25f];
+        textLabel.shadowColor = [UIColor VLCDarkTextShadowColor];
         textLabel.textColor = [UIColor colorWithRed:(118.0f/255.0f) green:(118.0f/255.0f) blue:(118.0f/255.0f) alpha:1.0f];
         textLabel.backgroundColor = [UIColor clearColor];
         [headerView addSubview:textLabel];
@@ -278,13 +280,14 @@
 {
     HTTPServer *server = self.uploadController.httpServer;
     if (server.isRunning) {
+        _uploadLocationLabel.numberOfLines = 0;
         if (server.listeningPort != 80)
-            _uploadLocationLabel.text = [NSString stringWithFormat:@"http://%@:%i", [self.uploadController currentIPAddress], server.listeningPort];
+            _uploadLocationLabel.text = [NSString stringWithFormat:@"http://%@:%i\nhttp://%@:%i", [self.uploadController currentIPAddress], server.listeningPort, [self.uploadController hostname], server.listeningPort];
         else
-            _uploadLocationLabel.text = [NSString stringWithFormat:@"http://%@", [self.uploadController currentIPAddress]];
+            _uploadLocationLabel.text = [NSString stringWithFormat:@"http://%@\nhttp://%@", [self.uploadController currentIPAddress], [self.uploadController hostname]];
         [_uploadButton setImage:[UIImage imageNamed:@"WifiUpOn"] forState:UIControlStateNormal];
     } else {
-        _uploadLocationLabel.text = NSLocalizedString(@"HTTP_UPLOAD_SERVER_OFF", @"");
+        _uploadLocationLabel.text = NSLocalizedString(@"HTTP_UPLOAD_SERVER_OFF", nil);
         [_uploadButton setImage:[UIImage imageNamed:@"WifiUp"] forState:UIControlStateNormal];
     }
 }

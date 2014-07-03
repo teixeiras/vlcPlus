@@ -170,34 +170,137 @@
         }
 
         NSMutableArray *mediaInHtml = [[NSMutableArray alloc] initWithCapacity:allMedia.count];
+        NSString *duration;
 
         for (NSManagedObject *mo in allMedia) {
-            if ([mo isKindOfClass:[MLFile class]])
-                [mediaInHtml addObject:[NSString stringWithFormat:@"<li><a href=\"download/%@\" download>%@</a> — <a href=\"thumbnail/%@.png\">preview</a></li>", [[(MLFile *)mo url] stringByReplacingOccurrencesOfString:@"file://"withString:@""], [(MLFile *)mo title], mo.objectID.URIRepresentation]];
+            if ([mo isKindOfClass:[MLFile class]]) {
+                duration = [[VLCTime timeWithNumber:[(MLFile *)mo duration]] stringValue];
+                [mediaInHtml addObject:[NSString stringWithFormat:
+                                        @"<div style=\"background-image:url('thumbnail/%@.png')\"> \
+                                        <a href=\"download/%@\" class=\"inner\"> \
+                                        <div class=\"down icon\"></div> \
+                                        <div class=\"infos\"> \
+                                        <span class=\"first-line\">%@</span> \
+                                        <span class=\"second-line\">%@ - %0.2f MB</span> \
+                                        </div> \
+                                        </a> \
+                                        </div>",
+                                        mo.objectID.URIRepresentation,
+                                        [[(MLFile *)mo url] stringByReplacingOccurrencesOfString:@"file://"withString:@""],
+                                        [(MLFile *)mo title],
+                                        duration, (float)([(MLFile *)mo fileSizeInBytes] / 1e6)]];
+            }
             else if ([mo isKindOfClass:[MLShow class]]) {
                 NSArray *episodes = [(MLShow *)mo sortedEpisodes];
-                [mediaInHtml addObject:[NSString stringWithFormat:@"<li>%@ — <a href=\"thumbnail/%@.png\">preview</a></li>", [(MLShow *)mo name], mo.objectID.URIRepresentation]];
-                for (MLShowEpisode *showEp in episodes)
-                    [mediaInHtml addObject:[NSString stringWithFormat:@"<lu><a href=\"download/%@\" download>%@</a> — <a href=\"thumbnail/%@.png\">preview</a></lu><br />", [[(MLFile *)[[showEp files] anyObject] url] stringByReplacingOccurrencesOfString:@"file://"withString:@""], showEp.name, showEp.objectID.URIRepresentation]];
+                [mediaInHtml addObject:[NSString stringWithFormat:
+                                        @"<div style=\"background-image:url('thumbnail/%@.png')\"> \
+                                        <a href=\"#\" class=\"inner\"> \
+                                        <div class=\"open icon\"></div> \
+                                        <div class=\"infos\"> \
+                                        <span class=\"first-line\">%@</span> \
+                                        <span class=\"second-line\">%d items</span> \
+                                        </div> \
+                                        </a> \
+                                        <div class=\"content\">",
+                                        mo.objectID.URIRepresentation,
+                                        [(MLShow *)mo name],
+                                        [episodes count]]];
+                for (MLShowEpisode *showEp in episodes) {
+                    duration = [[VLCTime timeWithNumber:[(MLFile *)[[showEp files] anyObject] duration]] stringValue];
+                    [mediaInHtml addObject:[NSString stringWithFormat:
+                                            @"<div style=\"background-image:url('thumbnail/%@.png')\"> \
+                                            <a href=\"download/%@\" class=\"inner\"> \
+                                            <div class=\"down icon\"></div> \
+                                            <div class=\"infos\"> \
+                                            <span class=\"first-line\">S%@E%@ - %@</span> \
+                                            <span class=\"second-line\">%@ - %0.2f MB</span> \
+                                            </div> \
+                                            </a> \
+                                            </div>",
+                                            showEp.objectID.URIRepresentation,
+                                            [[(MLFile *)[[showEp files] anyObject] url] stringByReplacingOccurrencesOfString:@"file://"withString:@""],
+                                            showEp.seasonNumber,
+                                            showEp.episodeNumber,
+                                            showEp.name,
+                                            duration, (float)([(MLFile *)[[showEp files] anyObject] fileSizeInBytes] / 1e6)]];
+                }
+                [mediaInHtml addObject:@"</div></div>"];
             } else if ([mo isKindOfClass:[MLLabel class]]) {
                 NSArray *folderItems = [(MLLabel *)mo sortedFolderItems];
-                [mediaInHtml addObject:[NSString stringWithFormat:@"<li>%@ — <a href=\"thumbnail/%@.png\">preview</a></li>", [(MLLabel *)mo name], mo.objectID.URIRepresentation]];
-                for (MLFile *file in folderItems)
-                    [mediaInHtml addObject:[NSString stringWithFormat:@"<lu><a href=\"download/%@\" download>%@</a> — <a href=\"thumbnail/%@.png\">preview</a></lu><br />", [[file url] stringByReplacingOccurrencesOfString:@"file://"withString:@""], file.title, file.objectID.URIRepresentation]];
+                [mediaInHtml addObject:[NSString stringWithFormat:
+                                        @"<div style=\"background-image:url('thumbnail/%@.png')\"> \
+                                        <a href=\"#\" class=\"inner\"> \
+                                        <div class=\"open icon\"></div> \
+                                        <div class=\"infos\"> \
+                                        <span class=\"first-line\">%@</span> \
+                                        <span class=\"second-line\">%d items</span> \
+                                        </div> \
+                                        </a> \
+                                        <div class=\"content\">",
+                                        mo.objectID.URIRepresentation,
+                                        [(MLLabel *)mo name],
+                                        [folderItems count]]];
+                for (MLFile *file in folderItems) {
+                    duration = [[VLCTime timeWithNumber:[file duration]] stringValue];
+                    [mediaInHtml addObject:[NSString stringWithFormat:
+                                            @"<div style=\"background-image:url('thumbnail/%@.png')\"> \
+                                            <a href=\"download/%@\" class=\"inner\"> \
+                                            <div class=\"down icon\"></div> \
+                                            <div class=\"infos\"> \
+                                            <span class=\"first-line\">%@</span> \
+                                            <span class=\"second-line\">%@ - %0.2f MB</span> \
+                                            </div> \
+                                            </a> \
+                                            </div>",
+                                            file.objectID.URIRepresentation,
+                                            [[file url] stringByReplacingOccurrencesOfString:@"file://"withString:@""],
+                                            file.title,
+                                            duration, (float)([file fileSizeInBytes] / 1e6)]];
+                }
+                [mediaInHtml addObject:@"</div></div>"];
             } else if ([mo isKindOfClass:[MLAlbum class]]) {
                 NSArray *albumTracks = [(MLAlbum *)mo sortedTracks];
-                [mediaInHtml addObject:[NSString stringWithFormat:@"<li>%@ — <a href=\"thumbnail/%@.png\">preview</a></li>", [(MLAlbum *)mo name], mo.objectID.URIRepresentation]];
-                for (MLAlbumTrack *track in albumTracks)
-                    [mediaInHtml addObject:[NSString stringWithFormat:@"<lu><a href=\"download/%@\" download>%@</a> — <a href=\"thumbnail/%@.png\">preview</a></lu><br />", [[(MLFile *)[[track files] anyObject] url] stringByReplacingOccurrencesOfString:@"file://"withString:@""], track.title, track.objectID.URIRepresentation]];
+                [mediaInHtml addObject:[NSString stringWithFormat:
+                                        @"<div style=\"background-image:url('thumbnail/%@.png')\"> \
+                                        <a href=\"#\" class=\"inner\"> \
+                                        <div class=\"open icon\"></div> \
+                                        <div class=\"infos\"> \
+                                        <span class=\"first-line\">%@</span> \
+                                        <span class=\"second-line\">%d items</span> \
+                                        </div> \
+                                        </a> \
+                                        <div class=\"content\">",
+                                        mo.objectID.URIRepresentation,
+                                        [(MLAlbum *)mo name],
+                                        [albumTracks count]]];
+                for (MLAlbumTrack *track in albumTracks) {
+                    duration = [[VLCTime timeWithNumber:[(MLFile *)[[track files] anyObject] duration]] stringValue];
+                    [mediaInHtml addObject:[NSString stringWithFormat:
+                                            @"<div style=\"background-image:url('thumbnail/%@.png')\"> \
+                                            <a href=\"download/%@\" class=\"inner\"> \
+                                            <div class=\"down icon\"></div> \
+                                            <div class=\"infos\"> \
+                                            <span class=\"first-line\">%@</span> \
+                                            <span class=\"second-line\">%@ - %0.2f MB</span> \
+                                            </div> \
+                                            </a> \
+                                            </div>",
+                                            track.objectID.URIRepresentation,
+                                            [[(MLFile *)[[track files] anyObject] url] stringByReplacingOccurrencesOfString:@"file://"withString:@""],
+                                            track.title,
+                                            duration, (float)([(MLFile *)[[track files] anyObject] fileSizeInBytes] / 1e6)]];
+                }
+                [mediaInHtml addObject:@"</div></div>"];
             }
         }
 
+        NSString *deviceModel = [[UIDevice currentDevice] model];
         NSDictionary *replacementDict = @{@"FILES" : [mediaInHtml componentsJoinedByString:@" "],
                                           @"WEBINTF_TITLE" : NSLocalizedString(@"WEBINTF_TITLE", nil),
                                           @"WEBINTF_DROPFILES" : NSLocalizedString(@"WEBINTF_DROPFILES", nil),
-                                          @"WEBINTF_DROPFILES_LONG" : NSLocalizedString(@"WEBINTF_DROPFILES_LONG", nil),
+                                          @"WEBINTF_DROPFILES_LONG" : [NSString stringWithFormat:NSLocalizedString(@"WEBINTF_DROPFILES_LONG", nil), deviceModel],
                                           @"WEBINTF_DOWNLOADFILES" : NSLocalizedString(@"WEBINTF_DOWNLOADFILES", nil),
-                                          @"WEBINTF_DOWNLOADFILES_LONG" : NSLocalizedString(@"WEBINTF_DOWNLOADFILES_LONG", nil)};
+                                          @"WEBINTF_DOWNLOADFILES_LONG" : [NSString stringWithFormat: NSLocalizedString(@"WEBINTF_DOWNLOADFILES_LONG", nil), deviceModel]};
 
         return [[HTTPDynamicFileResponse alloc] initWithFilePath:[self filePathForURI:path]
                                                    forConnection:self

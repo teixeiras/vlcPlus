@@ -45,10 +45,12 @@
 - (void)loadView
 {
     _tableView = [[UITableView alloc] initWithFrame:[UIScreen mainScreen].bounds style:UITableViewStylePlain];
-    _tableView.backgroundColor = [UIColor colorWithWhite:.122 alpha:1.];
+    _tableView.backgroundColor = [UIColor VLCDarkBackgroundColor];
     _tableView.delegate = self;
     _tableView.dataSource = self;
     _tableView.rowHeight = [VLCLocalNetworkListCell heightOfCell];
+    _tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    _tableView.indicatorStyle = UIScrollViewIndicatorStyleWhite;
     self.view = _tableView;
 }
 
@@ -77,8 +79,8 @@
     [_mutableObjectList removeAllObjects];
     _mutableObjectList = [_PlexParser PlexMediaServerParser:_PlexServerAddress port:_PlexServerPort navigationPath:_PlexServerPath];
 
-    self.tableView.separatorColor = [UIColor colorWithWhite:.122 alpha:1.];
-    self.view.backgroundColor = [UIColor colorWithWhite:.122 alpha:1.];
+    self.tableView.separatorColor = [UIColor VLCDarkBackgroundColor];
+    self.view.backgroundColor = [UIColor VLCDarkBackgroundColor];
 
     NSString *titleValue;
     if ([_PlexServerPath isEqualToString:@""])
@@ -95,6 +97,8 @@
     _searchDisplayController.searchResultsDelegate = self;
     if (SYSTEM_RUNS_IOS7_OR_LATER)
         _searchDisplayController.searchBar.searchBarStyle = UIBarStyleBlack;
+    _searchDisplayController.searchResultsTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    _searchDisplayController.searchResultsTableView.indicatorStyle = UIScrollViewIndicatorStyleWhite;
     _searchBar.delegate = self;
     self.tableView.tableHeaderView = _searchBar;
 
@@ -203,7 +207,7 @@
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(VLCLocalNetworkListCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    UIColor *color = (indexPath.row % 2 == 0)? [UIColor blackColor]: [UIColor colorWithWhite:.122 alpha:1.];
+    UIColor *color = (indexPath.row % 2 == 0)? [UIColor blackColor]: [UIColor VLCDarkBackgroundColor];
     cell.contentView.backgroundColor = cell.titleLabel.backgroundColor = cell.folderTitleLabel.backgroundColor = cell.subtitleLabel.backgroundColor =  color;
 }
 
@@ -251,7 +255,7 @@
     NSURL *itemURL = [NSURL URLWithString:[[mutableMediaObject objectAtIndex:0] objectForKey:@"keyMedia"]];
 
     if (![[itemURL absoluteString] isSupportedFormat]) {
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"FILE_NOT_SUPPORTED", @"") message:[NSString stringWithFormat:NSLocalizedString(@"FILE_NOT_SUPPORTED_LONG", @""), [itemURL absoluteString]] delegate:self cancelButtonTitle:NSLocalizedString(@"BUTTON_CANCEL", @"") otherButtonTitles:nil];
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"FILE_NOT_SUPPORTED", nil) message:[NSString stringWithFormat:NSLocalizedString(@"FILE_NOT_SUPPORTED_LONG", nil), [itemURL absoluteString]] delegate:self cancelButtonTitle:NSLocalizedString(@"BUTTON_CANCEL", nil) otherButtonTitles:nil];
         [alert show];
     } else if (itemURL) {
         NSString *fileName = [[mutableMediaObject objectAtIndex:0] objectForKey:@"namefile"];
@@ -302,13 +306,13 @@
     if (status == 200) {
         if ([tag isEqualToString:@"watched"]) {
             tag = @"unwatched";
-            cellStatusLbl = NSLocalizedString(@"PLEX_UNWATCHED", @"");
+            cellStatusLbl = NSLocalizedString(@"PLEX_UNWATCHED", nil);
         } else if ([tag isEqualToString:@"unwatched"]) {
             tag = @"watched";
-            cellStatusLbl = NSLocalizedString(@"PLEX_WATCHED", @"");
+            cellStatusLbl = NSLocalizedString(@"PLEX_WATCHED", nil);
         }
     } else
-        cellStatusLbl = NSLocalizedString(@"PLEX_ERROR_MARK", @"");
+        cellStatusLbl = NSLocalizedString(@"PLEX_ERROR_MARK", nil);
 
     [cell.statusLabel showStatusMessage:cellStatusLbl];
 
@@ -342,7 +346,7 @@
         [self _getFileSubtitleFromPlexServer:ObjList modeStream:NO];
 
     [self _downloadFileFromMediaItem:ObjList];
-    [cell.statusLabel showStatusMessage:NSLocalizedString(@"DOWNLOADING", @"")];
+    [cell.statusLabel showStatusMessage:NSLocalizedString(@"DOWNLOADING", nil)];
 }
 
 #pragma mark - Search Display Controller Delegate

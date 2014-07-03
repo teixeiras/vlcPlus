@@ -21,26 +21,27 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    self.timeLabel.text = NSLocalizedString(@"FIRST_STEPS_TIME", @"");
-    self.aspectLabel.text = NSLocalizedString(@"FIRST_STEPS_ASPECT", @"");
-    self.speedLabel.text = NSLocalizedString(@"FIRST_STEPS_SPEED", @"");
-    self.repeatLabel.text = NSLocalizedString(@"FIRST_STEPS_REPEAT", @"");
-    self.subtitlesLabel.text = NSLocalizedString(@"FIRST_STEPS_SUBTITLES", @"");
-    self.audioLabel.text = NSLocalizedString(@"FIRST_STEPS_AUDIO", @"");
-    self.volumeLabel.text = NSLocalizedString(@"FIRST_STEPS_VOLUME", @"");
-    self.positionLabel.text = NSLocalizedString(@"FIRST_STEPS_POSITION", @"");
-    self.effectsLabel.text = NSLocalizedString(@"VIDEO_FILTER", @"");
+    self.timeLabel.text = NSLocalizedString(@"FIRST_STEPS_TIME", nil);
+    self.aspectLabel.text = NSLocalizedString(@"FIRST_STEPS_ASPECT", nil);
+    self.speedLabel.text = NSLocalizedString(@"FIRST_STEPS_SPEED", nil);
+    self.repeatLabel.text = NSLocalizedString(@"FIRST_STEPS_REPEAT", nil);
+    self.subtitlesLabel.text = NSLocalizedString(@"FIRST_STEPS_SUBTITLES", nil);
+    self.audioLabel.text = NSLocalizedString(@"FIRST_STEPS_AUDIO", nil);
+    self.volumeLabel.text = NSLocalizedString(@"FIRST_STEPS_VOLUME", nil);
+    self.positionLabel.text = NSLocalizedString(@"FIRST_STEPS_POSITION", nil);
+    self.effectsLabel.text = NSLocalizedString(@"VIDEO_FILTER", nil);
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
+    [super viewWillAppear:animated];
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
         self.actualContentView.center = self.view.center;
 }
 
 - (NSString *)pageTitle
 {
-    return NSLocalizedString(@"FIRST_STEPS_PLAYBACK", @"");
+    return NSLocalizedString(@"FIRST_STEPS_PLAYBACK", nil);
 }
 
 - (NSUInteger)page

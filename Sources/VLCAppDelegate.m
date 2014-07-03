@@ -61,6 +61,19 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    if (SYSTEM_RUNS_IOS7_OR_LATER) {
+        // Change the keyboard for UISearchBar
+        [[UITextField appearance] setKeyboardAppearance:UIKeyboardAppearanceDark];
+        // For the cursor
+        [[UITextField appearance] setTintColor:[UIColor VLCOrangeTintColor]];
+        // Don't override the 'Cancel' button color in the search bar with the previous UITextField call. Use the default blue color
+        [[UIBarButtonItem appearanceWhenContainedIn:[UISearchBar class], nil] setTitleTextAttributes:@{NSForegroundColorAttributeName: [UIColor colorWithRed:0.0 green:122.0/255.0 blue:1.0 alpha:1.0]} forState:UIControlStateNormal];
+        // For the edit selection indicators
+        [[UITableView appearance] setTintColor:[UIColor VLCOrangeTintColor]];
+    }
+
+    [[UISwitch appearance] setOnTintColor:[UIColor VLCOrangeTintColor]];
+
     BWQuincyManager *quincyManager = [BWQuincyManager sharedQuincyManager];
     [quincyManager setSubmissionURL:@"http://crash.videolan.org/crash_v200.php"];
     [quincyManager setDelegate:self];
@@ -90,7 +103,7 @@
 
     self.window.rootViewController = self.revealController;
     // necessary to avoid navbar blinking in VLCOpenNetworkStreamViewController & VLCDownloadViewController
-    _revealController.contentViewController.view.backgroundColor = [UIColor colorWithWhite:.122 alpha:1.];
+    _revealController.contentViewController.view.backgroundColor = [UIColor VLCDarkBackgroundColor];
     [self.window makeKeyAndVisible];
 
     VLCMediaFileDiscoverer *discoverer = [VLCMediaFileDiscoverer sharedInstance];
@@ -143,7 +156,7 @@
 
             NSString *scheme = url.scheme;
             if ([scheme isEqualToString:@"http"] || [scheme isEqualToString:@"https"] || [scheme isEqualToString:@"ftp"]) {
-                VLCAlertView *alert = [[VLCAlertView alloc] initWithTitle:NSLocalizedString(@"OPEN_STREAM_OR_DOWNLOAD", @"") message:url.absoluteString cancelButtonTitle:NSLocalizedString(@"BUTTON_DOWNLOAD", @"") otherButtonTitles:@[NSLocalizedString(@"BUTTON_PLAY", @"")]];
+                VLCAlertView *alert = [[VLCAlertView alloc] initWithTitle:NSLocalizedString(@"OPEN_STREAM_OR_DOWNLOAD", nil) message:url.absoluteString cancelButtonTitle:NSLocalizedString(@"BUTTON_DOWNLOAD", nil) otherButtonTitles:@[NSLocalizedString(@"BUTTON_PLAY", nil)]];
                 alert.completion = ^(BOOL cancelled, NSInteger buttonIndex) {
                     if (cancelled)
                         [[self downloadViewController] addURLToDownloadList:url fileNameOfMedia:nil];
@@ -254,14 +267,8 @@
 
 - (NSString *)directoryPath
 {
-#define LOCAL_PLAYBACK_HACK 0
-#if LOCAL_PLAYBACK_HACK && TARGET_IPHONE_SIMULATOR
-    NSString *directoryPath = @"/Users/fkuehne/Desktop/VideoLAN docs/Clips/sel/";
-#else
     NSArray *searchPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *directoryPath = searchPaths[0];
-#endif
-
     return directoryPath;
 }
 

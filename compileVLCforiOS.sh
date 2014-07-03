@@ -4,13 +4,13 @@
 
 set -e
 
-PLATFORM=iphoneos
+PLATFORM="iphoneos"
 SDK=`xcrun --sdk iphoneos --show-sdk-version`
 SDK_MIN=6.1
 VERBOSE=no
 CONFIGURATION="Release"
 NONETWORK=no
-SKIPLIBVLCCOMPILATION=no
+SKIPLIBVLCCOMPILATION=yes
 UNSTABLEVLCKIT=yes
 
 TESTEDVLCKITHASH=4c79a817e
@@ -83,7 +83,7 @@ do
              VERBOSE=yes
              ;;
          s)
-             PLATFORM=iphonesimulator
+             PLATFORM="iphonesimulator"
              ;;
          d)  CONFIGURATION="Debug"
              ;;
@@ -245,8 +245,6 @@ git clone git://github.com/futuretap/InAppSettingsKit.git
 else
 cd WhiteRaccoon && git pull --rebase && cd ..
 fi
-
-
 if ! [ -e ObjCOpensubtitlesAPI ]; then
 git clone git://github.com/teixeiras/ObjCOpensubtitlesAPI.git
 else

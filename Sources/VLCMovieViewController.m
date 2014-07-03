@@ -26,6 +26,9 @@
 #import "OBSlider.h"
 #import "VLCStatusLabel.h"
 
+
+#import "VLCSubtitleManagerTableViewController.h"
+
 #define INPUT_RATE_DEFAULT  1000.
 #define FORWARD_SWIPE_DURATION 30
 #define BACKWARD_SWIPE_DURATION 10
@@ -1074,7 +1077,14 @@
 
 - (IBAction)switchSubtitleTrack:(id)sender
 {
-
+    [_mediaPlayer pause];
+    
+    VLCSubtitleManagerTableViewController * subtitleManagerController = [VLCSubtitleManagerTableViewController new];
+    
+    subtitleManagerController.modalPresentationStyle = UIModalPresentationFormSheet;
+    
+    [self presentViewController:subtitleManagerController animated:YES completion:nil];
+    
 }
 
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex

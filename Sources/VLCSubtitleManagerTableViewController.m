@@ -68,6 +68,13 @@
     self.mediaPlayer.currentVideoSubTitleIndex = [indexArray[index] intValue];
 }
 
+#pragma mark - Table view delegate
+
+-(UIView *) tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section {
+    return [UIView new];
+}
+
+
 #pragma mark - Table view data source
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
@@ -103,7 +110,6 @@
     
     return cell;
 }
-
 
 
 #pragma mark - Table view delegate

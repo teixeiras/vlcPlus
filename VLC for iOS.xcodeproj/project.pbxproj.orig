@@ -1227,8 +1227,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8F91EC7F195E1DAB00F5BCBA /* AssetsLibrary.framework in Frameworks */,
+<<<<<<< HEAD
 				3E08A27019503DCC002E5E50 /* libOpensubtitleAPI.a in Frameworks */,
+=======
+				8F91EC7F195E1DAB00F5BCBA /* AssetsLibrary.framework in Frameworks */,
+>>>>>>> 5cbf3e6dd3442f3e3abf5818e2532f663c6afca4
 				7D15168B194773630086FB8C /* MobileCoreServices.framework in Frameworks */,
 				7D168F7118D4A21B003FAF59 /* Accelerate.framework in Frameworks */,
 				CCE2A22E17A5859E00D9EAAD /* CoreText.framework in Frameworks */,
@@ -1855,8 +1858,11 @@
 		7D94FCDD16DE7D1000F2623B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				8F91EC7E195E1DAB00F5BCBA /* AssetsLibrary.framework */,
+<<<<<<< HEAD
 				3E08A26F19503DCC002E5E50 /* libOpensubtitleAPI.a */,
+=======
+				8F91EC7E195E1DAB00F5BCBA /* AssetsLibrary.framework */,
+>>>>>>> 5cbf3e6dd3442f3e3abf5818e2532f663c6afca4
 				7D15168A194773630086FB8C /* MobileCoreServices.framework */,
 				7D168F7018D4A21B003FAF59 /* Accelerate.framework */,
 				7D897889185E1344009BAB5D /* libCrashReporter.a */,
@@ -1925,7 +1931,12 @@
 			isa = PBXGroup;
 			children = (
 				7DC19AF41868CDB800810BF7 /* First Steps */,
+<<<<<<< HEAD
+				7DBBF183183AB4300009A339 /* VLCAboutViewController~ipad.xib */,
 				3E08A2781950492E002E5E50 /* VLCSubtitleManagerTableViewController.xib */,
+				7DBBF184183AB4300009A339 /* VLCAboutViewController~iphone.xib */,
+=======
+>>>>>>> 5cbf3e6dd3442f3e3abf5818e2532f663c6afca4
 				7DBBF185183AB4300009A339 /* VLCCloudStorageTableViewCell~ipad.xib */,
 				7DBBF186183AB4300009A339 /* VLCCloudStorageTableViewCell~iphone.xib */,
 				7DBBF187183AB4300009A339 /* VLCDownloadViewController.xib */,
@@ -3127,7 +3138,7 @@
 					"\"$(SRCROOT)/External/QuincyKit\"",
 					"\"$(SRCROOT)/External/PLCrashReporter\"",
 					"\"$(SDKROOT)/usr/lib/system\"",
-					"\"$(SRCROOT)/External/ObjCOpensubtitlesAPI",
+					"\"$(SRCROOT)/External/ObjCOpensubtitlesAPI $(PROJECT_DIR)/ImportedSources/ObjCOpensubtitlesAPI/build/Release-iphoneos",
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-Wl,-no_pie";
@@ -3175,7 +3186,7 @@
 					"\"$(SRCROOT)/External/QuincyKit\"",
 					"\"$(SRCROOT)/External/PLCrashReporter\"",
 					"\"$(SDKROOT)/usr/lib/system\"",
-					"\"$(SRCROOT)/External/ObjCOpensubtitlesAPI",
+					"\"$(SRCROOT)/External/ObjCOpensubtitlesAPI $(PROJECT_DIR)/ImportedSources/ObjCOpensubtitlesAPI/build/Release-iphoneos",
 				);
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-Wl,-no_pie";
@@ -3249,7 +3260,7 @@
 					"\"$(SRCROOT)/External/QuincyKit\"",
 					"\"$(SRCROOT)/External/PLCrashReporter\"",
 					"\"$(SDKROOT)/usr/lib/system\"",
-					"\"$(SRCROOT)/External/ObjCOpensubtitlesAPI",
+					"\"$(SRCROOT)/External/ObjCOpensubtitlesAPI $(PROJECT_DIR)/ImportedSources/ObjCOpensubtitlesAPI/build/Release-iphoneos",
 				);
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-Wl,-no_pie";

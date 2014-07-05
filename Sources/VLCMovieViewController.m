@@ -1079,7 +1079,7 @@
 {
     [_mediaPlayer pause];
     
-    VLCSubtitleManagerTableViewController * subtitleManagerController = [VLCSubtitleManagerTableViewController new];
+    VLCSubtitleManagerTableViewController * subtitleManagerController = [[VLCSubtitleManagerTableViewController alloc] initWithMediaPlayer:_mediaPlayer withFileName:self.fileFromMediaLibrary.title];
     
     subtitleManagerController.modalPresentationStyle = UIModalPresentationFormSheet;
     

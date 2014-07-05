@@ -42,8 +42,6 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
         self.connectivityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
         self.connectivityIndicator.frame = CGRectMake(self.tableView.center.x, self.tableView.center.y, 24, 24);
        
-        [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:kReuseCellEmbebedCell];
-        [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:kReuseCellExternalSubtitlesCell];
     }
     return self;
 }
@@ -55,6 +53,10 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
     UIBarButtonItem * barButtomItem = [[UIBarButtonItem alloc] initWithTitle:@"Cancel" style:UIBarButtonItemStylePlain target:self action:@selector(dismissView:)];
     
      self.navigationItem.rightBarButtonItem = barButtomItem;
+  
+    [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:kReuseCellEmbebedCell];
+    [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:kReuseCellExternalSubtitlesCell];
+  
     
     [self getAllSubtitles];
 }
@@ -73,10 +75,13 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
 
 #pragma mark - External Subtitles
 -(void) getAllSubtitles {
-    [[OSubManager sharedObject] searchSubtitlesForString:@"Orange Machine" onQuery:^(BOOL hasResults, NSArray * results)
+    [[OSubManager sharedObject] searchSubtitlesForString:self.fileName onQuery:^(BOOL hasResults, NSArray * results)
     {
         if (hasResults) {
             self.subtitles = results;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.tableView reloadData];
+            });
         } else {
             //No subtitle found
         }
@@ -181,10 +186,7 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-    if ([self hasEmbebedSubtitles]) {
-        return 2;
-    }
-    return 1;
+    return 2;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
@@ -199,7 +201,7 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
         }break;
             
         case VLCSubtitleManagerExternalCells:
-            if ([self.subtitles count] == 0) {
+            if ([self.subtitles count] > 0) {
                 return self.subtitles.count;
             } else {
                 return 1;
@@ -223,7 +225,7 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
     
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:reuseCell forIndexPath:indexPath];
     cell.textLabel.textColor = [UIColor whiteColor];
-    cell.backgroundColor = [UIColor clearColor];
+    cell.backgroundColor = self.tableView.backgroundColor;
     switch (indexPath.section) {
         case VLCSubtitleManagerEmbebedCells: {
             if ([self hasEmbebedSubtitles]) {
@@ -266,8 +268,14 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
         case VLCSubtitleManagerExternalCells:
             if ([self.subtitles count] != 0) {
                 Subtitle * subtitle = self.subtitles[indexPath.row];
+                NSString * tempSubtitleLocation = [NSTemporaryDirectory() stringByAppendingPathComponent:subtitle.SubFileName];
+                if ([[NSFileManager defaultManager] fileExistsAtPath:tempSubtitleLocation]) {
+                    [_mediaPlayer openVideoSubTitlesFromFile:tempSubtitleLocation];
+                    return;
+                }
+                
                 [[OSubManager sharedObject] downloadSubtitleWithId:subtitle.IDSubtitleFile onDownloadFinish:^(NSData * data) {
-                    NSString * tempSubtitleLocation = [NSTemporaryDirectory() stringByAppendingPathComponent:subtitle.SubFileName];
+                    [data writeToFile:tempSubtitleLocation atomically:YES];
                     [_mediaPlayer openVideoSubTitlesFromFile:tempSubtitleLocation];
 
                 } onFail:^(int code) {

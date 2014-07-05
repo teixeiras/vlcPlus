@@ -25,6 +25,7 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
 @property (nonatomic, strong) NSArray * subtitles;
 
 @property (nonatomic, strong) NSString * fileName;
+@property (nonatomic, strong) UIActivityIndicatorView * connectivityIndicator;
 @end
 
 @implementation VLCSubtitleManagerTableViewController
@@ -33,6 +34,16 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
     self = [super init];
     if (self) {
         self.mediaPlayer = mediaPlayer;
+        self.fileName = filename;
+        self.tableView.backgroundColor = [UIColor colorWithRed:(43.0f/255.0f) green:(43.0f/255.0f) blue:(43.0f/255.0f) alpha:1.0f];
+        self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+        self.tableView.indicatorStyle = UIScrollViewIndicatorStyleWhite;
+        
+        self.connectivityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+        self.connectivityIndicator.frame = CGRectMake(self.tableView.center.x, self.tableView.center.y, 24, 24);
+       
+        [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:kReuseCellEmbebedCell];
+        [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:kReuseCellExternalSubtitlesCell];
     }
     return self;
 }
@@ -44,6 +55,8 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
     UIBarButtonItem * barButtomItem = [[UIBarButtonItem alloc] initWithTitle:@"Cancel" style:UIBarButtonItemStylePlain target:self action:@selector(dismissView:)];
     
      self.navigationItem.rightBarButtonItem = barButtomItem;
+    
+    [self getAllSubtitles];
 }
 
 -(void) dismissView:(id) sender
@@ -81,7 +94,7 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
 #pragma mark - Embebed Subtitles
 -(NSArray *) embebedSubtitles
 {
-    return [self.mediaPlayer videoSubTitlesIndexes];
+    return [self.mediaPlayer videoSubTitlesNames];
 }
 
 -(BOOL) hasEmbebedSubtitles
@@ -114,6 +127,53 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
 
 -(UIView *) tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section {
     return [UIView new];
+}
+
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    NSObject *headerText;
+    switch(section) {
+        case VLCSubtitleManagerEmbebedCells:
+            headerText =  NSLocalizedString(@"EMBEBED_SUBTITLES", nil);
+            break;
+        case VLCSubtitleManagerExternalCells:
+            headerText =  NSLocalizedString(@"OPENSUBTITLES_SUBTITLES", nil);
+            break;
+    }
+    
+    UIView *headerView = nil;
+    if (headerText != [NSNull null]) {
+        headerView = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, [UIScreen mainScreen].bounds.size.height, 21.0f)];
+        if (!SYSTEM_RUNS_IOS7_OR_LATER) {
+            CAGradientLayer *gradient = [CAGradientLayer layer];
+            gradient.frame = headerView.bounds;
+            gradient.colors = @[
+                                (id)[UIColor colorWithRed:(66.0f/255.0f) green:(66.0f/255.0f) blue:(66.0f/255.0f) alpha:1.0f].CGColor,
+                                (id)[UIColor colorWithRed:(56.0f/255.0f) green:(56.0f/255.0f) blue:(56.0f/255.0f) alpha:1.0f].CGColor,
+                                ];
+            [headerView.layer insertSublayer:gradient atIndex:0];
+        } else
+            headerView.backgroundColor = [UIColor VLCDarkBackgroundColor];
+        
+        UILabel *textLabel = [[UILabel alloc] initWithFrame:CGRectInset(headerView.bounds, 12.0f, 5.0f)];
+        textLabel.text = (NSString *) headerText;
+        textLabel.font = [UIFont fontWithName:@"Helvetica-Bold" size:([UIFont systemFontSize] * 0.8f)];
+        textLabel.shadowOffset = CGSizeMake(0.0f, 1.0f);
+        textLabel.shadowColor = [UIColor VLCDarkTextShadowColor];
+        textLabel.textColor = [UIColor colorWithRed:(118.0f/255.0f) green:(118.0f/255.0f) blue:(118.0f/255.0f) alpha:1.0f];
+        textLabel.backgroundColor = [UIColor clearColor];
+        [headerView addSubview:textLabel];
+        
+        UIView *topLine = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 0.0f, [UIScreen mainScreen].bounds.size.height, 1.0f)];
+        topLine.backgroundColor = [UIColor colorWithRed:(95.0f/255.0f) green:(95.0f/255.0f) blue:(95.0f/255.0f) alpha:1.0f];
+        [headerView addSubview:topLine];
+        
+        UIView *bottomLine = [[UIView alloc] initWithFrame:CGRectMake(0.0f, 21.0f, [UIScreen mainScreen].bounds.size.height, 1.0f)];
+        bottomLine.backgroundColor = [UIColor colorWithRed:(16.0f/255.0f) green:(16.0f/255.0f) blue:(16.0f/255.0f) alpha:1.0f];
+        [headerView addSubview:bottomLine];
+    }
+    return headerView;
 }
 
 
@@ -160,10 +220,33 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
         embebedSubtitleCell = YES;
         reuseCell = kReuseCellEmbebedCell;
     }
+    
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:reuseCell forIndexPath:indexPath];
-    
-    // Configure the cell...
-    
+    cell.textLabel.textColor = [UIColor whiteColor];
+    cell.backgroundColor = [UIColor clearColor];
+    switch (indexPath.section) {
+        case VLCSubtitleManagerEmbebedCells: {
+            if ([self hasEmbebedSubtitles]) {
+                cell.textLabel.text = [self embebedSubtitles][indexPath.row];
+            } else {
+                cell.textLabel.text = NSLocalizedString(@"NO_RESULTS", @"");
+            }
+        }break;
+            
+        case VLCSubtitleManagerExternalCells:
+            if ([self.subtitles count] != 0) {
+                
+                Subtitle * subtitle = self.subtitles[indexPath.row];
+                cell.textLabel.text = subtitle.SubFileName;
+                
+            } else {
+                cell.textLabel.text = NSLocalizedString(@"NO_RESULTS", @"");
+            }
+            break;
+        default:
+            break;
+    }
+
     return cell;
 }
 
@@ -173,7 +256,30 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
 // In a xib-based application, navigation from a table can be handled in -tableView:didSelectRowAtIndexPath:
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-   
+    switch (indexPath.section) {
+        case VLCSubtitleManagerEmbebedCells: {
+            if ([self hasEmbebedSubtitles]) {
+                [self onEmbebedSubtitleSelect: indexPath.row];
+            }
+        }break;
+            
+        case VLCSubtitleManagerExternalCells:
+            if ([self.subtitles count] != 0) {
+                Subtitle * subtitle = self.subtitles[indexPath.row];
+                [[OSubManager sharedObject] downloadSubtitleWithId:subtitle.IDSubtitleFile onDownloadFinish:^(NSData * data) {
+                    NSString * tempSubtitleLocation = [NSTemporaryDirectory() stringByAppendingPathComponent:subtitle.SubFileName];
+                    [_mediaPlayer openVideoSubTitlesFromFile:tempSubtitleLocation];
+
+                } onFail:^(int code) {
+                    //Could not download subtitle
+                }];
+
+            }
+            break;
+        default:
+            break;
+    }
+ 
     [self dismissViewControllerAnimated:YES completion:nil];
 }
 

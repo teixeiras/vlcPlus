@@ -3130,10 +3130,7 @@
 					"\"$(SRCROOT)/External/ObjCOpensubtitlesAPI",
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = (
-					"-Wl,-no_pie",
-					"-ObjC",
-				);
+				OTHER_LDFLAGS = "-Wl,-no_pie";
 				PRODUCT_NAME = "VLC for iOS";
 				PROVISIONING_PROFILE = "";
 			};
@@ -3181,10 +3178,7 @@
 					"\"$(SRCROOT)/External/ObjCOpensubtitlesAPI",
 				);
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = (
-					"-Wl,-no_pie",
-					"-ObjC",
-				);
+				OTHER_LDFLAGS = "-Wl,-no_pie";
 				PRODUCT_NAME = "VLC for iOS";
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
@@ -3258,10 +3252,7 @@
 					"\"$(SRCROOT)/External/ObjCOpensubtitlesAPI",
 				);
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = (
-					"-Wl,-no_pie",
-					"-ObjC",
-				);
+				OTHER_LDFLAGS = "-Wl,-no_pie";
 				PRODUCT_NAME = "VLC for iOS";
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";

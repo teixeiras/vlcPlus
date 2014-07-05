@@ -9,5 +9,6 @@
 #import <UIKit/UIKit.h>
 
 @interface VLCSubtitleManagerTableViewController : UITableViewController
+- (instancetype)initWithMediaPlayer:(VLCMediaPlayer *) mediaPlayer withFileName:(NSString *) filename;
 
 @end

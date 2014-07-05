@@ -7,20 +7,28 @@
 //
 
 #import "VLCSubtitleManagerTableViewController.h"
+#import "UINavigationController+Theme.h"
 #import "OpensubtitleAPI.h"
 
 
 #define kReuseCellEmbebedCell @"EmbebedCell"
-#define kReuseCellExternalSubtitlesCell @"EmbebedCell"
+#define kReuseCellExternalSubtitlesCell @"ExternalCell"
+
+typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
+    VLCSubtitleManagerEmbebedCells = 0,
+    VLCSubtitleManagerExternalCells,
+};
+
 @interface VLCSubtitleManagerTableViewController ()
 
 @property (nonatomic, strong) VLCMediaPlayer *mediaPlayer;
 @property (nonatomic, strong) NSArray * subtitles;
 
+@property (nonatomic, strong) NSString * fileName;
 @end
 
 @implementation VLCSubtitleManagerTableViewController
-- (instancetype)initWithMediaPlayer:(VLCMediaPlayer *) mediaPlayer
+- (instancetype)initWithMediaPlayer:(VLCMediaPlayer *) mediaPlayer withFileName:(NSString *) filename
 {
     self = [super init];
     if (self) {
@@ -33,14 +41,46 @@
 {
     [super viewDidLoad];
     
-     self.navigationItem.rightBarButtonItem = self.editButtonItem;
+    UIBarButtonItem * barButtomItem = [[UIBarButtonItem alloc] initWithTitle:@"Cancel" style:UIBarButtonItemStylePlain target:self action:@selector(dismissView:)];
+    
+     self.navigationItem.rightBarButtonItem = barButtomItem;
 }
 
+-(void) dismissView:(id) sender
+{
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
 
-
-#pragma mark - Embebed Subtitles
--(NSArray *) embebedSubtitles {
+-(void) viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
     
+    [self.navigationController loadTheme];
+}
+
+#pragma mark - External Subtitles
+-(void) getAllSubtitles {
+    [[OSubManager sharedObject] searchSubtitlesForString:@"Orange Machine" onQuery:^(BOOL hasResults, NSArray * results)
+    {
+        if (hasResults) {
+            self.subtitles = results;
+        } else {
+            //No subtitle found
+        }
+    }];
+}
+
+-(void) retrieveSubtitleWithSubtitle:(Subtitle *) subtitle {
+    [[OSubManager sharedObject] downloadSubtitleWithId:subtitle.IDSubtitleFile onDownloadFinish:^(NSData * data) {
+        
+    } onFail:^(int code) {
+        
+    }];
+
+}
+#pragma mark - Embebed Subtitles
+-(NSArray *) embebedSubtitles
+{
     return [self.mediaPlayer videoSubTitlesIndexes];
 }
 
@@ -53,7 +93,8 @@
     return NO;
 }
 
--(NSString *) embebedSubtitleNameForIndex:(NSInteger ) index {
+-(NSString *) embebedSubtitleNameForIndex:(NSInteger ) index
+{
     NSArray *spuTracks = [self.mediaPlayer videoSubTitlesNames];
     NSArray *spuTrackIndexes = [self.mediaPlayer videoSubTitlesIndexes];
     
@@ -63,7 +104,8 @@
     return buttonTitle;
 }
 
--(void) onEmbebedSubtitleSelect:(NSInteger) index {
+-(void) onEmbebedSubtitleSelect:(NSInteger) index
+{
     NSArray * indexArray = self.mediaPlayer.videoSubTitlesIndexes;
     self.mediaPlayer.currentVideoSubTitleIndex = [indexArray[index] intValue];
 }
@@ -87,12 +129,26 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    if ([self hasEmbebedSubtitles]) {
-        if (section == 0) {
-            return [[self embebedSubtitles] count];
-        }
+    switch (section) {
+        case VLCSubtitleManagerEmbebedCells: {
+            if ([self hasEmbebedSubtitles]) {
+                return [[self embebedSubtitles] count];
+            } else {
+                return 1;
+            }
+        }break;
+            
+        case VLCSubtitleManagerExternalCells:
+            if ([self.subtitles count] == 0) {
+                return self.subtitles.count;
+            } else {
+                return 1;
+            }
+            break;
+        default:
+            break;
     }
-    return [self.subtitles count];
+    return 0;
 }
 
 

@@ -1081,9 +1081,10 @@
     
     VLCSubtitleManagerTableViewController * subtitleManagerController = [[VLCSubtitleManagerTableViewController alloc] initWithMediaPlayer:_mediaPlayer withFileName:self.fileFromMediaLibrary.title];
     
-    subtitleManagerController.modalPresentationStyle = UIModalPresentationFormSheet;
+    UINavigationController * navController = [[UINavigationController alloc]initWithRootViewController:subtitleManagerController];
+    navController.modalPresentationStyle = UIModalPresentationFormSheet;
     
-    [self presentViewController:subtitleManagerController animated:YES completion:nil];
+    [self presentViewController:navController animated:YES completion:nil];
     
 }
 

@@ -9,7 +9,7 @@
 #import "VLCSubtitleManagerTableViewController.h"
 #import "UINavigationController+Theme.h"
 #import "OpensubtitleAPI.h"
-
+#import "VLCSubtitleSettingsViewController.h"
 
 #define kReuseCellEmbebedCell @"EmbebedCell"
 #define kReuseCellExternalSubtitlesCell @"ExternalCell"
@@ -26,6 +26,8 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
 
 @property (nonatomic, strong) NSString * fileName;
 @property (nonatomic, strong) UIActivityIndicatorView * connectivityIndicator;
+
+@property (nonatomic, strong) VLCSubtitleSettingsViewController * settingsController;
 @end
 
 @implementation VLCSubtitleManagerTableViewController
@@ -39,8 +41,8 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
         self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
         self.tableView.indicatorStyle = UIScrollViewIndicatorStyleWhite;
         
-        self.connectivityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
-        self.connectivityIndicator.frame = CGRectMake(self.tableView.center.x, self.tableView.center.y, 24, 24);
+        self.connectivityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+  
        
     }
     return self;
@@ -49,16 +51,24 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    UIBarButtonItem * settings = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(showSettingsController:) ];
     
-    UIBarButtonItem * barButtomItem = [[UIBarButtonItem alloc] initWithTitle:@"Cancel" style:UIBarButtonItemStylePlain target:self action:@selector(dismissView:)];
+    self.navigationItem.rightBarButtonItem = settings;
     
-     self.navigationItem.rightBarButtonItem = barButtomItem;
+    UIBarButtonItem * barButtomItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"CANCEL", nil) style:UIBarButtonItemStylePlain target:self action:@selector(dismissView:)];
+    
+     self.navigationItem.leftBarButtonItem = barButtomItem;
   
     [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:kReuseCellEmbebedCell];
     [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:kReuseCellExternalSubtitlesCell];
   
-    
+    self.settingsController = [VLCSubtitleSettingsViewController new];
     [self getAllSubtitles];
+}
+
+-(void) showSettingsController:(id) sender
+{
+    [self.navigationController pushViewController:self.settingsController animated:YES];
 }
 
 -(void) dismissView:(id) sender
@@ -73,10 +83,35 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
     [self.navigationController loadTheme];
 }
 
+
+-(void) isLoading
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        
+        self.connectivityIndicator.frame = self.tableView.frame;
+        
+        [self.connectivityIndicator startAnimating];
+        
+        [self.view addSubview:self.connectivityIndicator];
+        
+    });
+}
+
+-(void) isNotLoadingAnymore {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.connectivityIndicator stopAnimating];
+        
+        [self.connectivityIndicator removeFromSuperview];
+        
+    });
+
+}
 #pragma mark - External Subtitles
 -(void) getAllSubtitles {
+    [self isLoading];
     [[OSubManager sharedObject] searchSubtitlesForString:self.fileName onQuery:^(BOOL hasResults, NSArray * results)
     {
+        [self isNotLoadingAnymore];
         if (hasResults) {
             self.subtitles = results;
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -88,14 +123,6 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
     }];
 }
 
--(void) retrieveSubtitleWithSubtitle:(Subtitle *) subtitle {
-    [[OSubManager sharedObject] downloadSubtitleWithId:subtitle.IDSubtitleFile onDownloadFinish:^(NSData * data) {
-        
-    } onFail:^(int code) {
-        
-    }];
-
-}
 #pragma mark - Embebed Subtitles
 -(NSArray *) embebedSubtitles
 {
@@ -262,6 +289,8 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
         case VLCSubtitleManagerEmbebedCells: {
             if ([self hasEmbebedSubtitles]) {
                 [self onEmbebedSubtitleSelect: indexPath.row];
+                [self dismissViewControllerAnimated:YES completion:nil];
+
             }
         }break;
             
@@ -271,15 +300,21 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
                 NSString * tempSubtitleLocation = [NSTemporaryDirectory() stringByAppendingPathComponent:subtitle.SubFileName];
                 if ([[NSFileManager defaultManager] fileExistsAtPath:tempSubtitleLocation]) {
                     [_mediaPlayer openVideoSubTitlesFromFile:tempSubtitleLocation];
+                    [self dismissViewControllerAnimated:YES completion:nil];
+
                     return;
                 }
-                
+                [self isLoading];
                 [[OSubManager sharedObject] downloadSubtitleWithId:subtitle.IDSubtitleFile onDownloadFinish:^(NSData * data) {
                     [data writeToFile:tempSubtitleLocation atomically:YES];
                     [_mediaPlayer openVideoSubTitlesFromFile:tempSubtitleLocation];
+                    [self isNotLoadingAnymore];
+                    [self dismissViewControllerAnimated:YES completion:nil];
 
                 } onFail:^(int code) {
-                    //Could not download subtitle
+                    [self isNotLoadingAnymore];
+                    [self dismissViewControllerAnimated:YES completion:nil];
+
                 }];
 
             }
@@ -288,7 +323,6 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
             break;
     }
  
-    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 

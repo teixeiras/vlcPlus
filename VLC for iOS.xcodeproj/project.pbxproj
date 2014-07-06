@@ -381,7 +381,8 @@
 		7DF7CA0717650C2A00C61739 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7DF7CA0617650C2A00C61739 /* AVFoundation.framework */; };
 		7DF7E791175F47DC0018858D /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7DF7E790175F47DC0018858D /* MediaPlayer.framework */; };
 		7DF9352F1958AB0600E60FD4 /* UIColor+Presets.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DF9352E1958AB0600E60FD4 /* UIColor+Presets.m */; };
-		8064A46D196857950029467C /* VLCSubtitleSettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8064A46C196857950029467C /* VLCSubtitleSettingsViewController.m */; };
+		8064A4741968A62A0029467C /* VLCSubtitleSettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8064A4731968A62A0029467C /* VLCSubtitleSettingsViewController.m */; };
+		80C041921968BFD200052D8D /* VLCSubtitleLangTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 80C041911968BFD200052D8D /* VLCSubtitleLangTableViewCell.m */; };
 		8F91EC79195CEC7900F5BCBA /* VLCOpenInActivity.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F91EC78195CEC7900F5BCBA /* VLCOpenInActivity.m */; };
 		8F91EC7C195DF9D200F5BCBA /* OpenInActivityIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = 8F91EC7A195DF9D200F5BCBA /* OpenInActivityIcon.png */; };
 		8F91EC7D195DF9D200F5BCBA /* OpenInActivityIcon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 8F91EC7B195DF9D200F5BCBA /* OpenInActivityIcon@2x.png */; };
@@ -1071,8 +1072,10 @@
 		7DF7E790175F47DC0018858D /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 		7DF9352D1958AB0600E60FD4 /* UIColor+Presets.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "UIColor+Presets.h"; path = "Sources/UIColor+Presets.h"; sourceTree = SOURCE_ROOT; };
 		7DF9352E1958AB0600E60FD4 /* UIColor+Presets.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "UIColor+Presets.m"; path = "Sources/UIColor+Presets.m"; sourceTree = SOURCE_ROOT; };
-		8064A46B196857950029467C /* VLCSubtitleSettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLCSubtitleSettingsViewController.h; sourceTree = SOURCE_ROOT; };
-		8064A46C196857950029467C /* VLCSubtitleSettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLCSubtitleSettingsViewController.m; sourceTree = SOURCE_ROOT; };
+		8064A4721968A62A0029467C /* VLCSubtitleSettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VLCSubtitleSettingsViewController.h; path = Sources/VLCSubtitleSettingsViewController.h; sourceTree = SOURCE_ROOT; };
+		8064A4731968A62A0029467C /* VLCSubtitleSettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = VLCSubtitleSettingsViewController.m; path = Sources/VLCSubtitleSettingsViewController.m; sourceTree = SOURCE_ROOT; };
+		80C041901968BFD200052D8D /* VLCSubtitleLangTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VLCSubtitleLangTableViewCell.h; path = Sources/VLCSubtitleLangTableViewCell.h; sourceTree = SOURCE_ROOT; };
+		80C041911968BFD200052D8D /* VLCSubtitleLangTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = VLCSubtitleLangTableViewCell.m; path = Sources/VLCSubtitleLangTableViewCell.m; sourceTree = SOURCE_ROOT; };
 		8F91EC77195CEC7900F5BCBA /* VLCOpenInActivity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VLCOpenInActivity.h; path = Sources/VLCOpenInActivity.h; sourceTree = SOURCE_ROOT; };
 		8F91EC78195CEC7900F5BCBA /* VLCOpenInActivity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = VLCOpenInActivity.m; path = Sources/VLCOpenInActivity.m; sourceTree = SOURCE_ROOT; };
 		8F91EC7A195DF9D200F5BCBA /* OpenInActivityIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = OpenInActivityIcon.png; sourceTree = "<group>"; };
@@ -1699,14 +1702,11 @@
 		7D5F7AB9175265B2006CCCFA /* Playback */ = {
 			isa = PBXGroup;
 			children = (
-				3E08A2761950492E002E5E50 /* VLCSubtitleManagerTableViewController.h */,
-				3E08A2771950492E002E5E50 /* VLCSubtitleManagerTableViewController.m */,
+				8064A4711968A6160029467C /* Subtitles */,
 				7D37848D183A98B6009EE944 /* VLCMovieViewController.h */,
 				7D37848E183A98B6009EE944 /* VLCMovieViewController.m */,
 				7D378490183A98BF009EE944 /* VLCExternalDisplayController.h */,
 				7D378491183A98BF009EE944 /* VLCExternalDisplayController.m */,
-				8064A46B196857950029467C /* VLCSubtitleSettingsViewController.h */,
-				8064A46C196857950029467C /* VLCSubtitleSettingsViewController.m */,
 			);
 			name = Playback;
 			sourceTree = "<group>";
@@ -2140,6 +2140,19 @@
 				7D3784AC183A9906009EE944 /* VLCDropboxTableViewController.m */,
 			);
 			name = Dropbox;
+			sourceTree = "<group>";
+		};
+		8064A4711968A6160029467C /* Subtitles */ = {
+			isa = PBXGroup;
+			children = (
+				8064A4721968A62A0029467C /* VLCSubtitleSettingsViewController.h */,
+				8064A4731968A62A0029467C /* VLCSubtitleSettingsViewController.m */,
+				3E08A2761950492E002E5E50 /* VLCSubtitleManagerTableViewController.h */,
+				3E08A2771950492E002E5E50 /* VLCSubtitleManagerTableViewController.m */,
+				80C041901968BFD200052D8D /* VLCSubtitleLangTableViewCell.h */,
+				80C041911968BFD200052D8D /* VLCSubtitleLangTableViewCell.m */,
+			);
+			name = Subtitles;
 			sourceTree = "<group>";
 		};
 		9B2E0CED17FB5B3F0098E3DF /* GoogleDrive */ = {
@@ -2708,6 +2721,7 @@
 				2915540117490A1E00B86CAD /* DDData.m in Sources */,
 				2915540217490A1E00B86CAD /* DDNumber.m in Sources */,
 				7D92897A1877467E009108FD /* VLCFirstStepsFourthPageViewController.m in Sources */,
+				8064A4741968A62A0029467C /* VLCSubtitleSettingsViewController.m in Sources */,
 				2915540317490A1E00B86CAD /* DDRange.m in Sources */,
 				4171D35818A2D90200A16EF9 /* LXReorderableCollectionViewFlowLayout.m in Sources */,
 				2915540417490A1E00B86CAD /* HTTPAuthenticationRequest.m in Sources */,
@@ -2732,6 +2746,7 @@
 				2915543C17490B9C00B86CAD /* HTTPDataResponse.m in Sources */,
 				2915543D17490B9C00B86CAD /* HTTPDynamicFileResponse.m in Sources */,
 				9BADAF45185FBD9D00108BD8 /* VLCFrostedGlasView.m in Sources */,
+				80C041921968BFD200052D8D /* VLCSubtitleLangTableViewCell.m in Sources */,
 				2915543E17490B9C00B86CAD /* HTTPErrorResponse.m in Sources */,
 				2915543F17490B9C00B86CAD /* HTTPFileResponse.m in Sources */,
 				2915544017490B9C00B86CAD /* HTTPRedirectResponse.m in Sources */,
@@ -2758,7 +2773,6 @@
 				7D63C19018774B1700BD5256 /* VLCFirstStepsSecondPageViewController.m in Sources */,
 				8F91EC79195CEC7900F5BCBA /* VLCOpenInActivity.m in Sources */,
 				7D37848F183A98B6009EE944 /* VLCMovieViewController.m in Sources */,
-				8064A46D196857950029467C /* VLCSubtitleSettingsViewController.m in Sources */,
 				7D378492183A98BF009EE944 /* VLCExternalDisplayController.m in Sources */,
 				7D378499183A98D1009EE944 /* VLCPlaylistCollectionViewCell.m in Sources */,
 				7D37849A183A98D1009EE944 /* VLCPlaylistTableViewCell.m in Sources */,

@@ -44,6 +44,8 @@
 #define kVLCSettingFTPTextEncoding @"ftp-text-encoding"
 #define kVLCSettingFTPTextEncodingDefaultValue @(5) // ISO Latin 1
 #define kVLCSettingPlaybackSpeedDefaultValue @"playback-speed"
+#define kVLCSettingSubtitlesLang @"subtitlesLang"
+#define kVLCSettingSubtitlesLangDefaultValue @[@"eng"]
 
 #define kVLCShowRemainingTime @"show-remaining-time"
 #define kVLCRecentURLs @"recent-urls"

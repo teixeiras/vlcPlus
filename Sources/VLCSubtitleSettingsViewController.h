@@ -8,6 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface VLCSubtitleSettingsViewController : UIViewController
+@interface VLCSubtitleSettingsViewController : UITableViewController
 
 @end

@@ -63,7 +63,6 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
     [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:kReuseCellExternalSubtitlesCell];
   
     self.settingsController = [VLCSubtitleSettingsViewController new];
-    [self getAllSubtitles];
 }
 
 -(void) showSettingsController:(id) sender
@@ -81,6 +80,8 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
     [super viewWillAppear:animated];
     
     [self.navigationController loadTheme];
+    
+    [self getAllSubtitles];
 }
 
 
@@ -106,9 +107,21 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
     });
 
 }
+
+-(void) setSubtitlesOnMovie {
+    [[OSubManager sharedObject] cleanLanguage];
+    for (NSString * lang in [[NSUserDefaults standardUserDefaults] arrayForKey:kVLCSettingSubtitlesLang]) {
+        [[OSubManager sharedObject] addSearchLanguage:lang];
+    }
+    
+}
+
 #pragma mark - External Subtitles
 -(void) getAllSubtitles {
     [self isLoading];
+    
+    [self setSubtitlesOnMovie];
+    
     [[OSubManager sharedObject] searchSubtitlesForString:self.fileName onQuery:^(BOOL hasResults, NSArray * results)
     {
         [self isNotLoadingAnymore];

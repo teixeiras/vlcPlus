@@ -55,7 +55,7 @@ typedef NS_ENUM(NSInteger, VLCSubtitleManagerCells) {
     
     self.navigationItem.rightBarButtonItem = settings;
     
-    UIBarButtonItem * barButtomItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"CANCEL", nil) style:UIBarButtonItemStylePlain target:self action:@selector(dismissView:)];
+    UIBarButtonItem * barButtomItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"BUTTON_CANCEL", nil) style:UIBarButtonItemStylePlain target:self action:@selector(dismissView:)];
     
      self.navigationItem.leftBarButtonItem = barButtomItem;
   

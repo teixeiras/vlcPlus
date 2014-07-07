@@ -41,8 +41,8 @@
     for (NSString * lang in [[NSUserDefaults standardUserDefaults] arrayForKey:kVLCSettingSubtitlesLang]) {
         [self.languagesSelected addObject:lang];
     }
-    
-    [[OSubManager sharedObject] retrieveCountryLanguagesLocalizedTo:@"por" onResult:^(BOOL hasResults, NSArray * results) {
+    NSString *preferredLang = [[NSLocale preferredLanguages] firstObject];
+    [[OSubManager sharedObject] retrieveCountryLanguagesLocalizedTo:preferredLang onResult:^(BOOL hasResults, NSArray * results) {
         if (hasResults) {
             self.languagesList = results;
             [self.tableView reloadData];

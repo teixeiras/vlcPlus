@@ -1008,16 +1008,6 @@
     self.subtitleContainer.hidden = NO;
     self.subtitleContainerLandscape.hidden = NO;
     
-
-    //TODO: [FT] Garbage
-    /*
-    if ([[_mediaPlayer videoSubTitlesIndexes] count] > 1) {
-        self.subtitleContainer.hidden = NO;
-        self.subtitleContainerLandscape.hidden = NO;
-    } else {
-        self.subtitleContainer.hidden = YES;
-        self.subtitleContainerLandscape.hidden = YES;
-    }*/
 }
 
 - (IBAction)playPause
@@ -1078,8 +1068,25 @@
 - (IBAction)switchSubtitleTrack:(id)sender
 {
     [_mediaPlayer pause];
-    
-    VLCSubtitleManagerTableViewController * subtitleManagerController = [[VLCSubtitleManagerTableViewController alloc] initWithMediaPlayer:_mediaPlayer withFileName:self.fileFromMediaLibrary.title];
+    NSString * filename;
+    if (self.fileFromMediaLibrary) {
+        @try {
+            MLFile *item = self.fileFromMediaLibrary;
+            filename = item.title;
+        }
+        @catch (NSException *exception) {
+            APLog(@"failed to save current media state - file removed?");
+        }
+    } else {
+        NSArray *files = [MLFile fileForURL:[[_mediaPlayer.media url] absoluteString]];
+        if (files.count > 0) {
+            MLFile *fileFromList = files[0];
+            filename = fileFromList.title;
+
+        }
+    }
+
+    VLCSubtitleManagerTableViewController * subtitleManagerController = [[VLCSubtitleManagerTableViewController alloc] initWithMediaPlayer:_mediaPlayer withFileName:filename];
     
     UINavigationController * navController = [[UINavigationController alloc]initWithRootViewController:subtitleManagerController];
     navController.modalPresentationStyle = UIModalPresentationFormSheet;

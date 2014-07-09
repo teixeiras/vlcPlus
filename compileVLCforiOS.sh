@@ -3,7 +3,7 @@
 # Copyright (C) Felix Paul Kühne, 2012-2013
 
 set -e
-
+SVN="/usr/local/bin/svn"
 PLATFORM="iphoneos"
 SDK=`xcrun --sdk iphoneos --show-sdk-version`
 SDK_MIN=6.1
@@ -143,6 +143,7 @@ cd MediaLibraryKit
 git reset --hard ${TESTEDMEDIALIBRARYKITHASH}
 cd ..
 fi
+
 if [ "$UNSTABLEVLCKIT" = "no" ]; then
 if ! [ -e VLCKit ]; then
 git clone git://git.videolan.org/vlc-bindings/VLCKit.git
@@ -202,10 +203,10 @@ fi
 cd ..
 fi
 if ! [ -e GDrive ]; then
-svn checkout http://google-api-objectivec-client.googlecode.com/svn/trunk/Source GDrive
+SVN checkout http://google-api-objectivec-client.googlecode.com/svn/trunk/Source GDrive
 cd GDrive && patch -p0 < ../../patches/gdrive/upgrade-default-target.patch && cd ..
 else
-cd GDrive && svn up && cd ..
+cd GDrive && $SVN up && cd ..
 fi
 if ! [ -e GHSidebarNav ]; then
 git clone git://github.com/gresrun/GHSidebarNav.git
@@ -250,8 +251,20 @@ git clone git://github.com/teixeiras/ObjCOpensubtitlesAPI.git
 else
 cd ObjCOpensubtitlesAPI && git pull --rebase && cd ..
 fi
-fi
 
+if ! [ -e "LiveSDK-for-iOS" ]; then
+pwd
+git init "LiveSDK-for-iOS"
+cd "LiveSDK-for-iOS"
+git remote add -f origin "https://github.com/liveservices/LiveSDK-for-iOS"
+echo "src/" >> .git/info/sparse-checkout
+git pull origin master
+cd ..
+else
+pwd
+cd "LiveSDK-for-iOS" && git pull --rebase && cd ..
+fi
+fi
 
 
 info "Setup 'External' folders"
@@ -268,6 +281,7 @@ gtl_build="${aspen_root_dir}/ImportedSources/GDrive/${xcbuilddir}"
 plcrashreporter_build="${aspen_root_dir}/ImportedSources/PLCrashReporter/${xcbuilddir}"
 quincykit_build="${aspen_root_dir}/ImportedSources/QuincyKit/client/iOS/QuincyLib/${xcbuilddir}"
 opensubtitle_build="${aspen_root_dir}/ImportedSources/ObjCOpensubtitlesAPI/${xcbuilddir}"
+liveSDK_build="${aspen_root_dir}/ImportedSources/LiveSDK-for-iOS/src/${xcbuilddir}"
 
 spopd #ImportedSources
 
@@ -278,6 +292,7 @@ ln -sf ${gtl_build} External/gtl
 ln -sf ${plcrashreporter_build} External/PLCrashReporter
 ln -sf ${quincykit_build} External/QuincyKit
 ln -sf ${opensubtitle_build} External/ObjCOpensubtitlesAPI
+ln -sf ${liveSDK_build} "External/LiveSDK-for-iOS"
 
 #
 # Build time
@@ -302,7 +317,7 @@ fi
 if [ "$SKIPLIBVLCCOMPILATION" = "yes" ]; then
     args="${args} -l"
 fi
-./buildMobileVLCKit.sh ${args} -k "${SDK}"
+./buildMobileVLCKit.sh ${args} -n -k "${SDK}" 
 buildxcodeproj MobileVLCKit "Aggregate static plugins"
 buildxcodeproj MobileVLCKit "MobileVLCKit"
 spopd
@@ -338,7 +353,8 @@ spushd ObjCOpensubtitlesAPI/
 buildxcodeproj OpensubtitleAPI
 spopd
 
-
+spushd "LiveSDK-for-iOS" 
+buildxcodeproj "LiveSDK-for-iOS"
 spopd # ImportedSources
 
 
